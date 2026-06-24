@@ -1,0 +1,94 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "mysql"
+}
+
+enum Role {
+  ADMIN
+  EDITOR
+}
+
+enum TipoQuestao {
+  MULTIPLA_ESCOLHA
+  VERDADEIRO_FALSO
+  ABERTA
+}
+
+model User {
+  id        String   @id @default(cuid())
+  name      String
+  email     String   @unique
+  password  String
+  role      Role     @default(EDITOR)
+  ativo     Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Grupo {
+  id        String      @id @default(cuid())
+  numero    Int         @unique
+  nome      String
+  ativo     Boolean     @default(true)
+  createdAt DateTime    @default(now())
+  submissoes Submissao[]
+}
+
+model Configuracao {
+  chave     String @id
+  valor     String @db.Text
+}
+
+model Questao {
+  id        String      @id @default(cuid())
+  texto     String      @db.Text
+  tipo      TipoQuestao @default(MULTIPLA_ESCOLHA)
+  pontos    Int         @default(1)
+  ordem     Int
+  ativa     Boolean     @default(true)
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
+
+  opcoes    Opcao[]
+  respostas Resposta[]
+}
+
+model Opcao {
+  id        String     @id @default(cuid())
+  texto     String
+  correta   Boolean    @default(false)
+  ordem     Int
+  questaoId String
+  questao   Questao    @relation(fields: [questaoId], references: [id], onDelete: Cascade)
+  respostas Resposta[]
+}
+
+model Submissao {
+  id        String     @id @default(cuid())
+  nome      String
+  whatsapp  String
+  grupoId   String?
+  grupo     Grupo?     @relation(fields: [grupoId], references: [id])
+  pontuacao Int        @default(0)
+  createdAt DateTime   @default(now())
+
+  respostas Resposta[]
+}
+
+model Resposta {
+  id          String    @id @default(cuid())
+  submissaoId String
+  questaoId   String
+  opcaoId     String?
+  textoLivre  String?   @db.Text
+
+  submissao Submissao @relation(fields: [submissaoId], references: [id], onDelete: Cascade)
+  questao   Questao   @relation(fields: [questaoId], references: [id])
+  opcao     Opcao?    @relation(fields: [opcaoId], references: [id])
+
+  @@unique([submissaoId, questaoId])
+}

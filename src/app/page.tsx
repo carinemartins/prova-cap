@@ -1,65 +1,103 @@
-import Image from "next/image";
+import { redirect } from "next/navigation";
+import { prisma } from "@/lib/prisma";
+import ProvaForm from "@/components/ProvaForm";
 
-export default function Home() {
-  return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
+export const dynamic = "force-dynamic";
+
+async function getConfigs() {
+  const configs = await prisma.configuracao.findMany();
+  return Object.fromEntries(configs.map((c) => [c.chave, c.valor]));
+}
+
+export default async function Home() {
+  const configs = await getConfigs();
+
+  // Se a prova estiver fechada, exibe aviso
+  if (configs.prova_aberta === "false") {
+    return (
+      <main className="min-h-screen bg-brand-dark flex items-center justify-center px-4">
+        <div className="text-center">
+          <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-brand-gold/15 border border-brand-gold/30 mb-6">
+            <span className="text-brand-gold text-2xl font-bold" style={{ fontFamily: "var(--font-playfair)" }}>C</span>
+          </div>
+          <h1 className="text-white text-2xl font-bold mb-3" style={{ fontFamily: "var(--font-playfair)" }}>
+            Prova encerrada
           </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+          <p className="text-white/50 text-sm">A prova não está aceitando respostas no momento.</p>
         </div>
       </main>
-    </div>
+    );
+  }
+
+  const questoes = await prisma.questao.findMany({
+    where: { ativa: true },
+    orderBy: { ordem: "asc" },
+    include: {
+      opcoes: { orderBy: { ordem: "asc" } },
+    },
+  });
+
+  const titulo = configs.prova_titulo ?? "Prova Final das Alunas CAP";
+  const descricao = configs.prova_descricao ?? "Treinamento Conserto de Roupas Lucrativo";
+  const mensagemSucesso = configs.prova_mensagem_sucesso;
+
+  return (
+    <main className="min-h-screen bg-brand-cream py-10 px-4">
+      <div className="max-w-2xl mx-auto">
+
+        {/* Logo / Cabeçalho */}
+        <div className="text-center mb-8">
+          <div className="inline-flex items-center gap-2 mb-3">
+            <div className="w-9 h-9 rounded-lg bg-brand-dark flex items-center justify-center shrink-0">
+              <span className="text-brand-gold font-bold text-base" style={{ fontFamily: "var(--font-playfair)" }}>C</span>
+            </div>
+            <div className="text-left">
+              <p className="text-xs font-semibold tracking-widest text-brand-gold uppercase">CAP</p>
+              <p className="text-xs text-brand-text/50 leading-none">Consertos e Ajustes Perfeitos</p>
+            </div>
+          </div>
+        </div>
+
+        {/* Card principal */}
+        <div className="bg-white rounded-2xl shadow-sm overflow-hidden border border-brand-cream-dark">
+
+          {/* Header do card */}
+          <div className="bg-brand-dark px-6 py-7 relative overflow-hidden">
+            <div className="absolute -right-8 -top-8 w-40 h-40 rounded-full bg-brand-gold/10" />
+            <div className="absolute -right-2 -bottom-10 w-24 h-24 rounded-full bg-brand-gold/5" />
+            <div className="relative">
+              <span className="inline-block text-xs font-semibold tracking-widest text-brand-gold uppercase mb-2">
+                {descricao}
+              </span>
+              <h1 className="text-white text-2xl font-bold leading-tight" style={{ fontFamily: "var(--font-playfair)" }}>
+                {titulo}
+              </h1>
+              <p className="text-white/50 text-sm mt-2">🎓 Chegou a hora de mostrar o que você aprendeu</p>
+            </div>
+          </div>
+
+          {/* Aviso motivacional */}
+          <div className="px-6 py-4 bg-brand-gold/8 border-b border-brand-gold/20">
+            <div className="space-y-1.5 text-sm text-brand-text">
+              <p className="flex gap-2 items-start">
+                <span className="text-brand-gold mt-0.5">✦</span>
+                <span>Se tornar uma <strong>CAP certificada</strong>: reconhecida, bem paga e faturando de R$3.000 a R$8.000/mês.</span>
+              </p>
+              <p className="flex gap-2 items-start">
+                <span className="text-brand-rose mt-0.5">✦</span>
+                <span>Ou seguir do mesmo jeito, enquanto outras completam o futuro que poderia ser seu.</span>
+              </p>
+            </div>
+            <p className="text-xs text-brand-text/40 mt-3">* Campos obrigatórios</p>
+          </div>
+
+          <ProvaForm questoes={questoes} mensagemSucesso={mensagemSucesso} />
+        </div>
+
+        <p className="text-center text-xs text-brand-text/30 mt-6">
+          CAP — Consertos e Ajustes Perfeitos · Treinamento CARINE
+        </p>
+      </div>
+    </main>
   );
 }
