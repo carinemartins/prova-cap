@@ -1,14 +1,15 @@
 import { NextResponse } from "next/server";
-import { auth } from "@/lib/auth";
+import { getServerSession } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 
 export async function GET() {
-  const session = await auth();
+  const session = await getServerSession();
   if (!session) return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
 
   const submissoes = await prisma.submissao.findMany({
     orderBy: { createdAt: "asc" },
     include: {
+      grupo: true,
       respostas: {
         include: { questao: true, opcao: true },
         orderBy: { questao: { ordem: "asc" } },
@@ -28,7 +29,7 @@ export async function GET() {
     return [
       s.nome,
       s.whatsapp,
-      s.grupo ?? "",
+      s.grupo ? `#${s.grupo.numero} ${s.grupo.nome}` : "",
       s.pontuacao,
       new Date(s.createdAt).toLocaleString("pt-BR"),
       ...questoes.map((q) => {

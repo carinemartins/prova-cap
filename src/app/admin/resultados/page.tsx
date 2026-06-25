@@ -16,6 +16,7 @@ export default async function ResultadosPage() {
     prisma.submissao.findMany({
       orderBy: { createdAt: "desc" },
       include: {
+        grupo: true,
         respostas: { include: { questao: true, opcao: true } },
       },
     }),
@@ -97,7 +98,7 @@ export default async function ResultadosPage() {
                 <tr key={s.id} className="hover:bg-brand-cream/40 transition-colors">
                   <td className="px-5 py-3.5 font-medium text-brand-text">{s.nome}</td>
                   <td className="px-5 py-3.5 text-brand-text/60">{s.whatsapp}</td>
-                  <td className="px-5 py-3.5 text-brand-text/60">{s.grupo ?? "—"}</td>
+                  <td className="px-5 py-3.5 text-brand-text/60">{s.grupo ? `#${s.grupo.numero} ${s.grupo.nome}` : "—"}</td>
                   <td className="px-5 py-3.5">
                     <span className="font-semibold text-brand-gold">{s.pontuacao} pts</span>
                   </td>

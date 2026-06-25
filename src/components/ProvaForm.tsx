@@ -450,7 +450,7 @@ function Sucesso({ mensagem }: { mensagem?: string }) {
 
 /** Extrai "a)" → letra "A" e o texto limpo da opção */
 function parsearOpcao(texto: string): { letra: string; conteudo: string } {
-  const m = texto.match(/^([a-zA-Z])\)\s*(.+)/s);
+  const m = texto.match(/^([a-zA-Z])\)\s*(.+)/);
   if (m) return { letra: m[1].toUpperCase(), conteudo: m[2].trim() };
   return { letra: "", conteudo: texto.trim() };
 }

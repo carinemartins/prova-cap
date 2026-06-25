@@ -1,4 +1,4 @@
-import NextAuth from "next-auth";
+import NextAuth, { type Session } from "next-auth";
 import Credentials from "next-auth/providers/credentials";
 import { prisma } from "@/lib/prisma";
 import bcrypt from "bcryptjs";
@@ -44,3 +44,8 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
   },
   session: { strategy: "jwt" },
 });
+
+/** Helper tipado para uso em route handlers e server components */
+export async function getServerSession(): Promise<Session | null> {
+  return (await auth()) as Session | null;
+}

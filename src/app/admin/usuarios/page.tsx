@@ -1,12 +1,12 @@
 import { prisma } from "@/lib/prisma";
-import { auth } from "@/lib/auth";
+import { getServerSession } from "@/lib/auth";
 import Link from "next/link";
 
 export const dynamic = "force-dynamic";
 
 export default async function UsuariosPage() {
-  const session = await auth();
-  const userRole = (session?.user as { role?: string })?.role;
+  const session = await getServerSession();
+  const userRole = session?.user?.role;
 
   if (userRole !== "ADMIN") {
     return (
