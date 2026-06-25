@@ -10,6 +10,7 @@ export default async function SubmissaoPage({ params }: { params: Promise<{ id: 
   const submissao = await prisma.submissao.findUnique({
     where: { id },
     include: {
+      grupo: true,
       respostas: {
         include: {
           questao: { include: { opcoes: true } },
@@ -31,7 +32,7 @@ export default async function SubmissaoPage({ params }: { params: Promise<{ id: 
       <div className="bg-white rounded-xl border border-gray-100 p-6 mb-6">
         <h1 className="text-xl font-bold text-gray-800">{submissao.nome}</h1>
         <p className="text-sm text-gray-500 mt-1">WhatsApp: {submissao.whatsapp}</p>
-        <p className="text-sm text-gray-500">Grupo: {submissao.grupo ?? "—"}</p>
+        <p className="text-sm text-gray-500">Grupo: {submissao.grupo ? `#${submissao.grupo.numero} — ${submissao.grupo.nome}` : "—"}</p>
         <p className="text-sm text-gray-500">
           Enviado em: {new Date(submissao.createdAt).toLocaleString("pt-BR")}
         </p>
