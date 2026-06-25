@@ -11,14 +11,27 @@
   --color-brand-rose-light: #EAAAB6;
   --color-brand-cream:      #FAF5ED;
   --color-brand-cream-dark: #F0E6D3;
-  --color-brand-dark:       #1A1208;
-  --color-brand-dark-mid:   #2D1F10;
+  --color-brand-dark:       #0A0A0A;
+  --color-brand-dark-mid:   #161616;
   --color-brand-text:       #3D2B1F;
+
+  --animate-slide-up: slideUp 0.28s cubic-bezier(0.16, 1, 0.3, 1) both;
+  --animate-fade-in:  fadeIn  0.4s ease both;
+}
+
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(22px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
 }
 
 body {
-  background: var(--color-brand-cream);
-  color: var(--color-brand-text);
+  background: #0A0A0A;
+  color: #fff;
   font-family: var(--font-inter), 'Inter', sans-serif;
   -webkit-font-smoothing: antialiased;
 }
