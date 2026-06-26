@@ -2,7 +2,7 @@
 
 @theme inline {
   --font-sans: var(--font-inter);
-  --font-display: var(--font-playfair);
+  --font-display: var(--font-playfair); /* Poppins */
 
   --color-brand-gold:       #C9A84C;
   --color-brand-gold-light: #E8CC85;
