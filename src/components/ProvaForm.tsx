@@ -341,7 +341,7 @@ export default function ProvaForm({ questoes, descricao, mensagemSucesso }: Prop
                 </Campo>
                 <Campo label="Qual é o seu WhatsApp?" obrigatorio>
                   <InputTexto type="tel" value={whatsapp} onChange={setWhatsapp}
-                    placeholder="(11) 99999-9999" onEnter={handleIdentidadeNext} />
+                    placeholder="(11) 99999-9999" onEnter={handleIdentidadeNext} mask="telefone" />
                 </Campo>
               </div>
 
@@ -476,15 +476,28 @@ function Campo({ label, obrigatorio, children }: { label: string; obrigatorio?: 
   );
 }
 
+function mascaraTelefone(valor: string): string {
+  const d = valor.replace(/\D/g, "").slice(0, 11);
+  if (d.length <= 2)  return d.length ? `(${d}` : "";
+  if (d.length <= 6)  return `(${d.slice(0,2)}) ${d.slice(2)}`;
+  if (d.length <= 10) return `(${d.slice(0,2)}) ${d.slice(2,6)}-${d.slice(6)}`;
+  return `(${d.slice(0,2)}) ${d.slice(2,7)}-${d.slice(7)}`;
+}
+
 function InputTexto({
-  type, value, onChange, placeholder, onEnter, autoFocus,
-}: { type: string; value: string; onChange: (v: string) => void; placeholder?: string; onEnter?: () => void; autoFocus?: boolean }) {
+  type, value, onChange, placeholder, onEnter, autoFocus, mask,
+}: { type: string; value: string; onChange: (v: string) => void; placeholder?: string; onEnter?: () => void; autoFocus?: boolean; mask?: "telefone" }) {
+  function handleChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const raw = e.target.value;
+    onChange(mask === "telefone" ? mascaraTelefone(raw) : raw);
+  }
   return (
     <input
       type={type} value={value}
-      onChange={(e) => onChange(e.target.value)}
+      onChange={handleChange}
       onKeyDown={(e) => e.key === "Enter" && onEnter?.()}
       placeholder={placeholder} autoFocus={autoFocus}
+      inputMode={mask === "telefone" ? "numeric" : undefined}
       className="w-full bg-white/[0.04] border border-white/10 rounded-2xl px-4 py-4 text-white text-base placeholder-white/20 focus:outline-none focus:border-brand-gold/40 focus:ring-1 focus:ring-brand-gold/20 transition-all"
     />
   );
