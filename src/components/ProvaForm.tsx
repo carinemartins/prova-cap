@@ -271,7 +271,7 @@ export default function ProvaForm({ questoes, descricao, mensagemSucesso }: Prop
                   <div className="w-full h-full rounded-full overflow-hidden bg-[#1a1208]">
                     {fotoOk ? (
                       <img
-                        src="/carine.jpg"
+                        src="/avatar-carine.jpeg"
                         alt="Prof. Carine Martins"
                         className="w-full h-full object-cover"
                         onError={() => setFotoOk(false)}

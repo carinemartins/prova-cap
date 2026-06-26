@@ -5,13 +5,13 @@
 
 */
 -- AlterTable
-ALTER TABLE `questao` MODIFY `texto` TEXT NOT NULL;
+ALTER TABLE `Questao` MODIFY `texto` TEXT NOT NULL;
 
 -- AlterTable
-ALTER TABLE `resposta` MODIFY `textoLivre` TEXT NULL;
+ALTER TABLE `Resposta` MODIFY `textoLivre` TEXT NULL;
 
 -- AlterTable
-ALTER TABLE `submissao` DROP COLUMN `grupo`,
+ALTER TABLE `Submissao` DROP COLUMN `grupo`,
     ADD COLUMN `grupoId` VARCHAR(191) NULL;
 
 -- CreateTable
