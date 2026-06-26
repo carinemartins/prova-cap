@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import LogoHeader from "./LogoHeader";
+import Certificado from "./Certificado";
 
 type Opcao   = { id: string; texto: string; ordem: number };
 type Questao = {
@@ -34,9 +35,10 @@ export default function ProvaForm({ questoes, descricao, mensagemSucesso }: Prop
   const [grupoId,  setGrupoId]  = useState<string | null>(null);
   const [respostas, setRespostas] = useState<Record<string, string>>({});
   const [grupos,   setGrupos]   = useState<Grupo[]>([]);
-  const [enviando, setEnviando] = useState(false);
-  const [enviado,  setEnviado]  = useState(false);
-  const [erro,     setErro]     = useState("");
+  const [enviando,       setEnviando]       = useState(false);
+  const [enviado,        setEnviado]        = useState(false);
+  const [certificadoNome, setCertificadoNome] = useState<string | null>(null);
+  const [erro,           setErro]           = useState("");
   const [fotoOk,   setFotoOk]   = useState(true);
   const autoRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -102,7 +104,7 @@ export default function ProvaForm({ questoes, descricao, mensagemSucesso }: Prop
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error ?? "Erro ao enviar.");
-      setEnviado(true);
+      setCertificadoNome(nome.trim());
     } catch (err) {
       setErro(err instanceof Error ? err.message : "Erro ao enviar. Tente novamente.");
     } finally {
@@ -110,6 +112,7 @@ export default function ProvaForm({ questoes, descricao, mensagemSucesso }: Prop
     }
   }
 
+  if (certificadoNome) return <Certificado nome={certificadoNome} />;
   if (enviado) return <Sucesso mensagem={mensagemSucesso} />;
 
   // ═══════════════════════════════════════════════

@@ -57,7 +57,7 @@ export async function POST(req: NextRequest) {
 
     await prisma.submissao.update({ where: { id: submissao.id }, data: { pontuacao } });
 
-    return NextResponse.json({ ok: true });
+    return NextResponse.json({ ok: true, submissaoId: submissao.id, pontuacao });
   } catch (err) {
     console.error(err);
     return NextResponse.json({ error: "Erro interno" }, { status: 500 });
