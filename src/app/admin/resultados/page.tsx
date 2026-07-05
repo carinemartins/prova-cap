@@ -3,7 +3,19 @@ import Link from "next/link";
 
 export const dynamic = "force-dynamic";
 
-export default async function ResultadosPage() {
+const PAGE_SIZE = 20;
+
+export default async function ResultadosPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ page?: string }>;
+}) {
+  const { page: pageParam } = await searchParams;
+
+  const totalSubmissoes = await prisma.submissao.count();
+  const totalPages = Math.max(1, Math.ceil(totalSubmissoes / PAGE_SIZE));
+  const page = Math.min(Math.max(1, Number(pageParam) || 1), totalPages);
+
   const [questoes, submissoes] = await Promise.all([
     prisma.questao.findMany({
       where: { ativa: true, tipo: { not: "ABERTA" } },
@@ -15,6 +27,8 @@ export default async function ResultadosPage() {
     }),
     prisma.submissao.findMany({
       orderBy: { createdAt: "desc" },
+      skip: (page - 1) * PAGE_SIZE,
+      take: PAGE_SIZE,
       include: {
         grupo: true,
         respostas: { include: { questao: true, opcao: true } },
@@ -27,7 +41,7 @@ export default async function ResultadosPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-white" style={{ fontFamily: 'var(--font-playfair)' }}>Resultados</h1>
-          <p className="text-sm text-white/40 mt-1">{submissoes.length} submissão(ões)</p>
+          <p className="text-sm text-white/40 mt-1">{totalSubmissoes} submissão(ões)</p>
         </div>
         <a
           href="/api/admin/export"
@@ -80,7 +94,14 @@ export default async function ResultadosPage() {
 
       {/* Lista de submissões */}
       <section>
-        <h2 className="text-base font-semibold text-white mb-4">Todas as submissões</h2>
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-base font-semibold text-white">Todas as submissões</h2>
+          {totalSubmissoes > 0 && (
+            <p className="text-xs text-white/35">
+              {(page - 1) * PAGE_SIZE + 1}–{Math.min(page * PAGE_SIZE, totalSubmissoes)} de {totalSubmissoes}
+            </p>
+          )}
+        </div>
         <div className="bg-white/[0.03] rounded-2xl border border-white/10 overflow-hidden">
           <table className="w-full text-sm">
             <thead>
@@ -122,7 +143,58 @@ export default async function ResultadosPage() {
             </tbody>
           </table>
         </div>
+
+        {totalPages > 1 && <Paginacao page={page} totalPages={totalPages} />}
       </section>
     </div>
+  );
+}
+
+function Paginacao({ page, totalPages }: { page: number; totalPages: number }) {
+  const janela = 2;
+  const paginas = Array.from({ length: totalPages }, (_, i) => i + 1).filter(
+    (n) => n === 1 || n === totalPages || Math.abs(n - page) <= janela
+  );
+
+  return (
+    <div className="flex items-center justify-center gap-1.5 mt-4">
+      <PageLink page={page - 1} disabled={page <= 1}>
+        ← Anterior
+      </PageLink>
+
+      {paginas.map((n, i) => (
+        <span key={n} className="flex items-center gap-1.5">
+          {i > 0 && paginas[i - 1] !== n - 1 && <span className="text-white/25 text-sm px-1">…</span>}
+          <PageLink page={n} ativo={n === page}>{n}</PageLink>
+        </span>
+      ))}
+
+      <PageLink page={page + 1} disabled={page >= totalPages}>
+        Próxima →
+      </PageLink>
+    </div>
+  );
+}
+
+function PageLink({
+  page, ativo, disabled, children,
+}: { page: number; ativo?: boolean; disabled?: boolean; children: React.ReactNode }) {
+  const base = "min-w-9 h-9 px-2.5 flex items-center justify-center rounded-lg text-sm font-medium transition-colors";
+
+  if (disabled) {
+    return <span className={`${base} text-white/20 cursor-not-allowed`}>{children}</span>;
+  }
+
+  return (
+    <Link
+      href={`/admin/resultados?page=${page}`}
+      className={`${base} ${
+        ativo
+          ? "bg-brand-gold text-brand-dark"
+          : "text-white/60 hover:bg-white/8 hover:text-white"
+      }`}
+    >
+      {children}
+    </Link>
   );
 }
