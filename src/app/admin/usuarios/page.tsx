@@ -10,7 +10,7 @@ export default async function UsuariosPage() {
 
   if (userRole !== "ADMIN") {
     return (
-      <div className="p-8 text-center text-brand-text/40">
+      <div className="p-8 text-center text-white/40">
         Acesso restrito a administradores.
       </div>
     );
@@ -22,8 +22,8 @@ export default async function UsuariosPage() {
     <div className="p-8">
       <div className="flex items-center justify-between mb-7">
         <div>
-          <h1 className="text-2xl font-bold text-brand-text" style={{ fontFamily: 'var(--font-playfair)' }}>Usuários</h1>
-          <p className="text-sm text-brand-text/50 mt-1">{usuarios.length} usuário(s) cadastrado(s)</p>
+          <h1 className="text-2xl font-bold text-white" style={{ fontFamily: 'var(--font-playfair)' }}>Usuários</h1>
+          <p className="text-sm text-white/40 mt-1">{usuarios.length} usuário(s) cadastrado(s)</p>
         </div>
         <Link
           href="/admin/usuarios/novo"
@@ -33,28 +33,28 @@ export default async function UsuariosPage() {
         </Link>
       </div>
 
-      <div className="bg-white rounded-2xl border border-brand-cream-dark overflow-hidden">
+      <div className="bg-white/[0.03] rounded-2xl border border-white/10 overflow-hidden">
         <table className="w-full text-sm">
-          <thead className="bg-brand-cream/60">
+          <thead>
             <tr>
-              <th className="text-left px-5 py-3 text-xs font-semibold text-brand-text/50 uppercase tracking-wider">Nome</th>
-              <th className="text-left px-5 py-3 text-xs font-semibold text-brand-text/50 uppercase tracking-wider">Email</th>
-              <th className="text-left px-5 py-3 text-xs font-semibold text-brand-text/50 uppercase tracking-wider">Papel</th>
-              <th className="text-left px-5 py-3 text-xs font-semibold text-brand-text/50 uppercase tracking-wider">Status</th>
-              <th className="text-left px-5 py-3 text-xs font-semibold text-brand-text/50 uppercase tracking-wider">Criado em</th>
+              <th className="text-left px-5 py-3 text-xs font-semibold text-white/35 uppercase tracking-wider">Nome</th>
+              <th className="text-left px-5 py-3 text-xs font-semibold text-white/35 uppercase tracking-wider">Email</th>
+              <th className="text-left px-5 py-3 text-xs font-semibold text-white/35 uppercase tracking-wider">Papel</th>
+              <th className="text-left px-5 py-3 text-xs font-semibold text-white/35 uppercase tracking-wider">Status</th>
+              <th className="text-left px-5 py-3 text-xs font-semibold text-white/35 uppercase tracking-wider">Criado em</th>
               <th className="px-5 py-3"></th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-brand-cream-dark">
+          <tbody className="divide-y divide-white/8">
             {usuarios.map((u) => (
-              <tr key={u.id} className="hover:bg-brand-cream/40 transition-colors">
-                <td className="px-5 py-3.5 font-medium text-brand-text">{u.name}</td>
-                <td className="px-5 py-3.5 text-brand-text/60">{u.email}</td>
+              <tr key={u.id} className="hover:bg-white/[0.03] transition-colors">
+                <td className="px-5 py-3.5 font-medium text-white/90">{u.name}</td>
+                <td className="px-5 py-3.5 text-white/55">{u.email}</td>
                 <td className="px-5 py-3.5">
                   <span className={`text-xs px-2.5 py-1 rounded-full font-medium ${
                     u.role === "ADMIN"
-                      ? "bg-brand-gold/15 text-brand-gold-dark"
-                      : "bg-brand-cream-dark text-brand-text/60"
+                      ? "bg-brand-gold/15 text-brand-gold"
+                      : "bg-white/8 text-white/55"
                   }`}>
                     {u.role === "ADMIN" ? "Admin" : "Editor"}
                   </span>
@@ -62,13 +62,13 @@ export default async function UsuariosPage() {
                 <td className="px-5 py-3.5">
                   <span className={`text-xs px-2.5 py-1 rounded-full font-medium ${
                     u.ativo
-                      ? "bg-green-50 text-green-700"
+                      ? "bg-green-500/10 text-green-400"
                       : "bg-brand-rose/10 text-brand-rose"
                   }`}>
                     {u.ativo ? "Ativo" : "Inativo"}
                   </span>
                 </td>
-                <td className="px-5 py-3.5 text-brand-text/40 text-xs">
+                <td className="px-5 py-3.5 text-white/35 text-xs">
                   {new Date(u.createdAt).toLocaleDateString("pt-BR")}
                 </td>
                 <td className="px-5 py-3.5">

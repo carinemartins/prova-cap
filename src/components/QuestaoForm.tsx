@@ -110,45 +110,45 @@ export default function QuestaoForm({ questao }: Props) {
   }
 
   return (
-    <div className="space-y-5">
+    <div className="bg-white/[0.03] rounded-2xl border border-white/10 p-6 space-y-5">
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">Texto da questão</label>
+        <label className="block text-xs font-semibold text-white/40 uppercase tracking-wider mb-1.5">Texto da questão</label>
         <textarea
           value={texto}
           onChange={(e) => setTexto(e.target.value)}
-          className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-400 min-h-[80px]"
+          className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm text-white placeholder-white/25 focus:outline-none focus:border-brand-gold/50 focus:ring-1 focus:ring-brand-gold/20 transition-colors min-h-[80px]"
         />
       </div>
 
       <div className="grid grid-cols-3 gap-4">
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Tipo</label>
+          <label className="block text-xs font-semibold text-white/40 uppercase tracking-wider mb-1.5">Tipo</label>
           <select
             value={tipo}
             onChange={(e) => handleTipoChange(e.target.value as Questao["tipo"])}
-            className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-400"
+            className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-3 text-sm text-white focus:outline-none focus:border-brand-gold/50 focus:ring-1 focus:ring-brand-gold/20 transition-colors [&>option]:text-brand-dark"
           >
             {TIPOS.map((t) => <option key={t.value} value={t.value}>{t.label}</option>)}
           </select>
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Pontos</label>
+          <label className="block text-xs font-semibold text-white/40 uppercase tracking-wider mb-1.5">Pontos</label>
           <input
             type="number"
             min={0}
             value={pontos}
             onChange={(e) => setPontos(Number(e.target.value))}
-            className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-400"
+            className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-3 text-sm text-white focus:outline-none focus:border-brand-gold/50 focus:ring-1 focus:ring-brand-gold/20 transition-colors"
           />
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Ordem</label>
+          <label className="block text-xs font-semibold text-white/40 uppercase tracking-wider mb-1.5">Ordem</label>
           <input
             type="number"
             min={1}
             value={ordem}
             onChange={(e) => setOrdem(Number(e.target.value))}
-            className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-400"
+            className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-3 text-sm text-white focus:outline-none focus:border-brand-gold/50 focus:ring-1 focus:ring-brand-gold/20 transition-colors"
           />
         </div>
       </div>
@@ -159,15 +159,15 @@ export default function QuestaoForm({ questao }: Props) {
           id="ativa"
           checked={ativa}
           onChange={(e) => setAtiva(e.target.checked)}
-          className="accent-purple-600"
+          className="accent-brand-gold"
         />
-        <label htmlFor="ativa" className="text-sm text-gray-700">Questão ativa</label>
+        <label htmlFor="ativa" className="text-sm text-white/70">Questão ativa</label>
       </div>
 
       {tipo !== "ABERTA" && (
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Opções <span className="text-xs text-gray-400">(marque a correta)</span>
+          <label className="block text-xs font-semibold text-white/40 uppercase tracking-wider mb-2">
+            Opções <span className="normal-case text-white/25">(marque a correta)</span>
           </label>
           <div className="space-y-2">
             {opcoes.map((op, idx) => (
@@ -177,21 +177,21 @@ export default function QuestaoForm({ questao }: Props) {
                   name="correta"
                   checked={op.correta}
                   onChange={() => setOpcaoCorreta(idx)}
-                  className="accent-purple-600 shrink-0"
+                  className="accent-brand-gold shrink-0"
                 />
                 <input
                   type="text"
                   value={op.texto}
                   onChange={(e) => setOpcoes((prev) => prev.map((o, i) => i === idx ? { ...o, texto: e.target.value } : o))}
                   disabled={tipo === "VERDADEIRO_FALSO"}
-                  className="flex-1 border border-gray-300 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-purple-400 disabled:bg-gray-50"
+                  className="flex-1 bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-sm text-white placeholder-white/25 focus:outline-none focus:border-brand-gold/50 focus:ring-1 focus:ring-brand-gold/20 transition-colors disabled:bg-white/[0.02] disabled:text-white/40"
                   placeholder={`Opção ${idx + 1}`}
                 />
                 {tipo !== "VERDADEIRO_FALSO" && opcoes.length > 2 && (
                   <button
                     type="button"
                     onClick={() => removeOpcao(idx)}
-                    className="text-red-400 hover:text-red-600 text-xs"
+                    className="text-brand-rose/60 hover:text-brand-rose text-xs"
                   >
                     ✕
                   </button>
@@ -203,7 +203,7 @@ export default function QuestaoForm({ questao }: Props) {
             <button
               type="button"
               onClick={addOpcao}
-              className="mt-2 text-sm text-purple-600 hover:underline"
+              className="mt-2 text-sm text-brand-gold hover:text-brand-gold-light font-medium hover:underline"
             >
               + Adicionar opção
             </button>
@@ -211,14 +211,14 @@ export default function QuestaoForm({ questao }: Props) {
         </div>
       )}
 
-      {erro && <p className="text-red-500 text-sm">{erro}</p>}
+      {erro && <p className="text-brand-rose text-sm bg-brand-rose/10 border border-brand-rose/20 rounded-lg px-3 py-2">{erro}</p>}
 
       <div className="flex gap-3 pt-2">
         <button
           type="button"
           onClick={handleSave}
           disabled={saving}
-          className="bg-purple-600 hover:bg-purple-700 disabled:opacity-60 text-white font-medium px-6 py-2.5 rounded-lg text-sm transition-colors"
+          className="bg-brand-gold hover:bg-brand-gold-dark disabled:opacity-60 text-brand-dark font-semibold px-6 py-2.5 rounded-xl text-sm transition-colors"
         >
           {saving ? "Salvando..." : questao ? "Salvar alterações" : "Criar questão"}
         </button>
@@ -227,7 +227,7 @@ export default function QuestaoForm({ questao }: Props) {
             type="button"
             onClick={handleDelete}
             disabled={deleting}
-            className="border border-red-300 text-red-500 hover:bg-red-50 disabled:opacity-60 px-6 py-2.5 rounded-lg text-sm transition-colors"
+            className="border border-brand-rose/30 text-brand-rose hover:bg-brand-rose/10 disabled:opacity-60 px-6 py-2.5 rounded-xl text-sm transition-colors"
           >
             {deleting ? "Excluindo..." : "Excluir"}
           </button>

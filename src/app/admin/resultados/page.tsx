@@ -26,12 +26,12 @@ export default async function ResultadosPage() {
     <div className="p-8 space-y-8">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-brand-text" style={{ fontFamily: 'var(--font-playfair)' }}>Resultados</h1>
-          <p className="text-sm text-brand-text/50 mt-1">{submissoes.length} submissão(ões)</p>
+          <h1 className="text-2xl font-bold text-white" style={{ fontFamily: 'var(--font-playfair)' }}>Resultados</h1>
+          <p className="text-sm text-white/40 mt-1">{submissoes.length} submissão(ões)</p>
         </div>
         <a
           href="/api/admin/export"
-          className="text-sm bg-brand-dark text-white font-medium px-4 py-2.5 rounded-xl hover:bg-brand-dark-mid transition-colors"
+          className="text-sm bg-brand-gold text-brand-dark font-semibold px-4 py-2.5 rounded-xl hover:bg-brand-gold-dark transition-colors"
         >
           Exportar CSV
         </a>
@@ -39,13 +39,13 @@ export default async function ResultadosPage() {
 
       {/* Análise por questão */}
       <section>
-        <h2 className="text-base font-semibold text-brand-text mb-4">Análise por questão</h2>
+        <h2 className="text-base font-semibold text-white mb-4">Análise por questão</h2>
         <div className="space-y-4">
           {questoes.map((q) => {
             const total = q.respostas.length;
             return (
-              <div key={q.id} className="bg-white rounded-2xl border border-brand-cream-dark p-5">
-                <p className="text-sm font-medium text-brand-text mb-3">
+              <div key={q.id} className="bg-white/[0.03] rounded-2xl border border-white/10 p-5">
+                <p className="text-sm font-medium text-white/90 mb-3">
                   <span className="text-brand-gold font-bold mr-1.5">{q.ordem}.</span>
                   {q.texto}
                 </p>
@@ -56,12 +56,12 @@ export default async function ResultadosPage() {
                     return (
                       <div key={op.id}>
                         <div className="flex justify-between text-xs mb-1">
-                          <span className={op.correta ? "text-brand-gold font-semibold" : "text-brand-text/60"}>
+                          <span className={op.correta ? "text-brand-gold font-semibold" : "text-white/55"}>
                             {op.correta ? "✓ " : "○ "}{op.texto}
                           </span>
-                          <span className="text-brand-text/40">{count} ({pct}%)</span>
+                          <span className="text-white/35">{count} ({pct}%)</span>
                         </div>
-                        <div className="h-1.5 bg-brand-cream-dark rounded-full overflow-hidden">
+                        <div className="h-1.5 bg-white/8 rounded-full overflow-hidden">
                           <div
                             className={`h-full rounded-full transition-all ${op.correta ? "bg-brand-gold" : "bg-brand-rose/50"}`}
                             style={{ width: `${pct}%` }}
@@ -71,7 +71,7 @@ export default async function ResultadosPage() {
                     );
                   })}
                 </div>
-                <p className="text-xs text-brand-text/30 mt-3">{total} respostas</p>
+                <p className="text-xs text-white/25 mt-3">{total} respostas</p>
               </div>
             );
           })}
@@ -80,29 +80,29 @@ export default async function ResultadosPage() {
 
       {/* Lista de submissões */}
       <section>
-        <h2 className="text-base font-semibold text-brand-text mb-4">Todas as submissões</h2>
-        <div className="bg-white rounded-2xl border border-brand-cream-dark overflow-hidden">
+        <h2 className="text-base font-semibold text-white mb-4">Todas as submissões</h2>
+        <div className="bg-white/[0.03] rounded-2xl border border-white/10 overflow-hidden">
           <table className="w-full text-sm">
-            <thead className="bg-brand-cream/60">
+            <thead>
               <tr>
-                <th className="text-left px-5 py-3 text-xs font-semibold text-brand-text/50 uppercase tracking-wider">Nome</th>
-                <th className="text-left px-5 py-3 text-xs font-semibold text-brand-text/50 uppercase tracking-wider">WhatsApp</th>
-                <th className="text-left px-5 py-3 text-xs font-semibold text-brand-text/50 uppercase tracking-wider">Grupo</th>
-                <th className="text-left px-5 py-3 text-xs font-semibold text-brand-text/50 uppercase tracking-wider">Pontuação</th>
-                <th className="text-left px-5 py-3 text-xs font-semibold text-brand-text/50 uppercase tracking-wider">Data</th>
+                <th className="text-left px-5 py-3 text-xs font-semibold text-white/35 uppercase tracking-wider">Nome</th>
+                <th className="text-left px-5 py-3 text-xs font-semibold text-white/35 uppercase tracking-wider">WhatsApp</th>
+                <th className="text-left px-5 py-3 text-xs font-semibold text-white/35 uppercase tracking-wider">Grupo</th>
+                <th className="text-left px-5 py-3 text-xs font-semibold text-white/35 uppercase tracking-wider">Pontuação</th>
+                <th className="text-left px-5 py-3 text-xs font-semibold text-white/35 uppercase tracking-wider">Data</th>
                 <th className="px-5 py-3"></th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-brand-cream-dark">
+            <tbody className="divide-y divide-white/8">
               {submissoes.map((s) => (
-                <tr key={s.id} className="hover:bg-brand-cream/40 transition-colors">
-                  <td className="px-5 py-3.5 font-medium text-brand-text">{s.nome}</td>
-                  <td className="px-5 py-3.5 text-brand-text/60">{s.whatsapp}</td>
-                  <td className="px-5 py-3.5 text-brand-text/60">{s.grupo ? `#${s.grupo.numero} ${s.grupo.nome}` : "—"}</td>
+                <tr key={s.id} className="hover:bg-white/[0.03] transition-colors">
+                  <td className="px-5 py-3.5 font-medium text-white/90">{s.nome}</td>
+                  <td className="px-5 py-3.5 text-white/55">{s.whatsapp}</td>
+                  <td className="px-5 py-3.5 text-white/55">{s.grupo ? `#${s.grupo.numero} ${s.grupo.nome}` : "—"}</td>
                   <td className="px-5 py-3.5">
                     <span className="font-semibold text-brand-gold">{s.pontuacao} pts</span>
                   </td>
-                  <td className="px-5 py-3.5 text-brand-text/40 text-xs">
+                  <td className="px-5 py-3.5 text-white/35 text-xs">
                     {new Date(s.createdAt).toLocaleString("pt-BR")}
                   </td>
                   <td className="px-5 py-3.5">
@@ -114,7 +114,7 @@ export default async function ResultadosPage() {
               ))}
               {submissoes.length === 0 && (
                 <tr>
-                  <td colSpan={6} className="px-5 py-12 text-center text-brand-text/30">
+                  <td colSpan={6} className="px-5 py-12 text-center text-white/25">
                     Nenhuma submissão ainda.
                   </td>
                 </tr>

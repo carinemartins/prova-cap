@@ -47,42 +47,42 @@ export default function UsuarioForm({ usuario }: Props) {
   }
 
   return (
-    <div className="space-y-4">
+    <div className="bg-white/[0.03] rounded-2xl border border-white/10 p-6 space-y-4">
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">Nome</label>
+        <label className="block text-xs font-semibold text-white/40 uppercase tracking-wider mb-1.5">Nome</label>
         <input
           type="text"
           value={name}
           onChange={(e) => setName(e.target.value)}
-          className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-400"
+          className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm text-white placeholder-white/25 focus:outline-none focus:border-brand-gold/50 focus:ring-1 focus:ring-brand-gold/20 transition-colors"
         />
       </div>
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
+        <label className="block text-xs font-semibold text-white/40 uppercase tracking-wider mb-1.5">Email</label>
         <input
           type="email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
-          className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-400"
+          className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm text-white placeholder-white/25 focus:outline-none focus:border-brand-gold/50 focus:ring-1 focus:ring-brand-gold/20 transition-colors"
         />
       </div>
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">
+        <label className="block text-xs font-semibold text-white/40 uppercase tracking-wider mb-1.5">
           {usuario ? "Nova senha (deixe vazio para não alterar)" : "Senha"}
         </label>
         <input
           type="password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
-          className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-400"
+          className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm text-white placeholder-white/25 focus:outline-none focus:border-brand-gold/50 focus:ring-1 focus:ring-brand-gold/20 transition-colors"
         />
       </div>
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">Papel</label>
+        <label className="block text-xs font-semibold text-white/40 uppercase tracking-wider mb-1.5">Papel</label>
         <select
           value={role}
           onChange={(e) => setRole(e.target.value as "ADMIN" | "EDITOR")}
-          className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-400"
+          className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-3 text-sm text-white focus:outline-none focus:border-brand-gold/50 focus:ring-1 focus:ring-brand-gold/20 transition-colors [&>option]:text-brand-dark"
         >
           <option value="ADMIN">Admin</option>
           <option value="EDITOR">Editor</option>
@@ -94,18 +94,18 @@ export default function UsuarioForm({ usuario }: Props) {
           id="ativo"
           checked={ativo}
           onChange={(e) => setAtivo(e.target.checked)}
-          className="accent-purple-600"
+          className="accent-brand-gold"
         />
-        <label htmlFor="ativo" className="text-sm text-gray-700">Usuário ativo</label>
+        <label htmlFor="ativo" className="text-sm text-white/70">Usuário ativo</label>
       </div>
 
-      {erro && <p className="text-red-500 text-sm">{erro}</p>}
+      {erro && <p className="text-brand-rose text-sm bg-brand-rose/10 border border-brand-rose/20 rounded-lg px-3 py-2">{erro}</p>}
 
       <button
         type="button"
         onClick={handleSave}
         disabled={saving}
-        className="bg-purple-600 hover:bg-purple-700 disabled:opacity-60 text-white font-medium px-6 py-2.5 rounded-lg text-sm transition-colors"
+        className="bg-brand-gold hover:bg-brand-gold-dark disabled:opacity-60 text-brand-dark font-semibold px-6 py-2.5 rounded-xl text-sm transition-colors"
       >
         {saving ? "Salvando..." : usuario ? "Salvar alterações" : "Criar usuário"}
       </button>

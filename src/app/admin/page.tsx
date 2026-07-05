@@ -22,10 +22,10 @@ export default async function AdminDashboard() {
 
       {/* Título */}
       <div className="mb-7">
-        <h1 className="text-2xl font-bold text-brand-text" style={{ fontFamily: 'var(--font-playfair)' }}>
+        <h1 className="text-2xl font-bold text-white" style={{ fontFamily: 'var(--font-playfair)' }}>
           Dashboard
         </h1>
-        <p className="text-sm text-brand-text/50 mt-1">Visão geral das provas e alunas</p>
+        <p className="text-sm text-white/40 mt-1">Visão geral das provas e alunas</p>
       </div>
 
       {/* Cards de stats */}
@@ -36,38 +36,38 @@ export default async function AdminDashboard() {
       </div>
 
       {/* Tabela de últimas respostas */}
-      <div className="bg-white rounded-2xl border border-brand-cream-dark overflow-hidden">
-        <div className="px-6 py-4 border-b border-brand-cream-dark flex items-center justify-between">
-          <h2 className="font-semibold text-brand-text">Últimas respostas</h2>
-          <span className="text-xs text-brand-text/40 bg-brand-cream px-2 py-1 rounded-full">
+      <div className="bg-white/[0.03] rounded-2xl border border-white/10 overflow-hidden">
+        <div className="px-6 py-4 border-b border-white/10 flex items-center justify-between">
+          <h2 className="font-semibold text-white">Últimas respostas</h2>
+          <span className="text-xs text-white/40 bg-white/5 px-2 py-1 rounded-full">
             últimas 5
           </span>
         </div>
         <table className="w-full text-sm">
-          <thead className="bg-brand-cream/60">
+          <thead>
             <tr>
-              <th className="text-left px-6 py-3 text-xs font-semibold text-brand-text/50 uppercase tracking-wider">Nome</th>
-              <th className="text-left px-6 py-3 text-xs font-semibold text-brand-text/50 uppercase tracking-wider">Pontuação</th>
-              <th className="text-left px-6 py-3 text-xs font-semibold text-brand-text/50 uppercase tracking-wider">Data</th>
+              <th className="text-left px-6 py-3 text-xs font-semibold text-white/35 uppercase tracking-wider">Nome</th>
+              <th className="text-left px-6 py-3 text-xs font-semibold text-white/35 uppercase tracking-wider">Pontuação</th>
+              <th className="text-left px-6 py-3 text-xs font-semibold text-white/35 uppercase tracking-wider">Data</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-brand-cream-dark">
+          <tbody className="divide-y divide-white/8">
             {ultimasSubmissoes.map((s: { id: string; nome: string; pontuacao: number; createdAt: Date }) => (
-              <tr key={s.id} className="hover:bg-brand-cream/40 transition-colors">
-                <td className="px-6 py-3.5 font-medium text-brand-text">{s.nome}</td>
+              <tr key={s.id} className="hover:bg-white/[0.03] transition-colors">
+                <td className="px-6 py-3.5 font-medium text-white/90">{s.nome}</td>
                 <td className="px-6 py-3.5">
                   <span className="inline-flex items-center gap-1 text-brand-gold font-semibold">
                     {s.pontuacao} pts
                   </span>
                 </td>
-                <td className="px-6 py-3.5 text-brand-text/40 text-xs">
+                <td className="px-6 py-3.5 text-white/35 text-xs">
                   {new Date(s.createdAt).toLocaleDateString("pt-BR")}
                 </td>
               </tr>
             ))}
             {ultimasSubmissoes.length === 0 && (
               <tr>
-                <td colSpan={3} className="px-6 py-12 text-center text-brand-text/30">
+                <td colSpan={3} className="px-6 py-12 text-center text-white/25">
                   Nenhuma resposta ainda.
                 </td>
               </tr>
@@ -81,9 +81,9 @@ export default async function AdminDashboard() {
 
 function StatCard({ label, value, icon }: { label: string; value: string | number; icon: string }) {
   return (
-    <div className="bg-white rounded-2xl border border-brand-cream-dark px-6 py-5">
+    <div className="bg-white/[0.03] rounded-2xl border border-white/10 px-6 py-5">
       <div className="flex items-center justify-between mb-3">
-        <p className="text-sm text-brand-text/50">{label}</p>
+        <p className="text-sm text-white/45">{label}</p>
         <span className="text-lg">{icon}</span>
       </div>
       <p className="text-3xl font-bold text-brand-gold">{value}</p>

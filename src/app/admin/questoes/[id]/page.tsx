@@ -16,7 +16,10 @@ export default async function EditarQuestaoPage({ params }: { params: Promise<{ 
 
   return (
     <div className="p-8 max-w-2xl">
-      <h1 className="text-2xl font-bold text-gray-800 mb-6">Editar Questão</h1>
+      <div className="mb-7">
+        <h1 className="text-2xl font-bold text-white" style={{ fontFamily: "var(--font-playfair)" }}>Editar questão</h1>
+        <p className="text-sm text-white/40 mt-1">Atualize o conteúdo ou as opções desta pergunta</p>
+      </div>
       <QuestaoForm questao={questao} />
     </div>
   );
