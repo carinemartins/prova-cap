@@ -9,6 +9,7 @@ export default function SetupPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
+  const [edicaoNome, setEdicaoNome] = useState("");
   const [erro, setErro] = useState("");
   const [loading, setLoading] = useState(false);
   const [checking, setChecking] = useState(true);
@@ -40,7 +41,7 @@ export default function SetupPage() {
     const res = await fetch("/api/admin/setup", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name, email, password }),
+      body: JSON.stringify({ name, email, password, edicaoNome }),
     });
 
     const data = await res.json();
@@ -129,6 +130,17 @@ export default function SetupPage() {
                 onChange={(e) => setConfirm(e.target.value)}
                 className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm text-white placeholder-white/20 focus:outline-none focus:border-brand-gold/50 focus:ring-1 focus:ring-brand-gold/30 transition-colors"
                 placeholder="Repita a senha"
+                required
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-semibold text-white/50 uppercase tracking-wider mb-1.5">Nome da edição atual</label>
+              <input
+                type="text"
+                value={edicaoNome}
+                onChange={(e) => setEdicaoNome(e.target.value)}
+                className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm text-white placeholder-white/20 focus:outline-none focus:border-brand-gold/50 focus:ring-1 focus:ring-brand-gold/30 transition-colors"
+                placeholder="Ex: CAP23"
                 required
               />
             </div>

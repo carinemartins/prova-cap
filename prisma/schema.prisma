@@ -29,22 +29,45 @@ model User {
   updatedAt DateTime @updatedAt
 }
 
+model Edicao {
+  id        String   @id @default(cuid())
+  nome      String   @unique
+  ativa     Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  grupos        Grupo[]
+  questoes      Questao[]
+  configuracoes Configuracao[]
+  submissoes    Submissao[]
+}
+
 model Grupo {
   id        String      @id @default(cuid())
-  numero    Int         @unique
+  edicaoId  String
+  edicao    Edicao      @relation(fields: [edicaoId], references: [id])
+  numero    Int
   nome      String
   ativo     Boolean     @default(true)
   createdAt DateTime    @default(now())
   submissoes Submissao[]
+
+  @@unique([edicaoId, numero])
 }
 
 model Configuracao {
-  chave     String @id
-  valor     String @db.Text
+  id       String @id @default(cuid())
+  edicaoId String
+  edicao   Edicao @relation(fields: [edicaoId], references: [id])
+  chave    String
+  valor    String @db.Text
+
+  @@unique([edicaoId, chave])
 }
 
 model Questao {
   id        String      @id @default(cuid())
+  edicaoId  String
+  edicao    Edicao      @relation(fields: [edicaoId], references: [id])
   texto     String      @db.Text
   tipo      TipoQuestao @default(MULTIPLA_ESCOLHA)
   pontos    Int         @default(1)
@@ -69,6 +92,8 @@ model Opcao {
 
 model Submissao {
   id        String     @id @default(cuid())
+  edicaoId  String
+  edicao    Edicao     @relation(fields: [edicaoId], references: [id])
   nome      String
   whatsapp  String
   grupoId   String?

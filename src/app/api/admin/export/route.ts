@@ -1,12 +1,17 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { getEdicaoAtiva } from "@/lib/edicao";
 
-export async function GET() {
+export async function GET(req: NextRequest) {
   const session = await getServerSession();
   if (!session) return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
 
+  const edicaoIdParam = req.nextUrl.searchParams.get("edicaoId");
+  const edicaoId = edicaoIdParam ?? (await getEdicaoAtiva()).id;
+
   const submissoes = await prisma.submissao.findMany({
+    where: { edicaoId },
     orderBy: { createdAt: "asc" },
     include: {
       grupo: true,
@@ -18,7 +23,7 @@ export async function GET() {
   });
 
   const questoes = await prisma.questao.findMany({
-    where: { ativa: true },
+    where: { edicaoId, ativa: true },
     orderBy: { ordem: "asc" },
   });
 

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { getEdicaoAtiva } from "@/lib/edicao";
 
 function requireAdmin(role?: string) {
   return role === "ADMIN" || role === "EDITOR";
@@ -12,7 +13,11 @@ export async function GET() {
     return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
   }
 
-  const grupos = await prisma.grupo.findMany({ orderBy: { numero: "asc" } });
+  const edicao = await getEdicaoAtiva();
+  const grupos = await prisma.grupo.findMany({
+    where: { edicaoId: edicao.id },
+    orderBy: { numero: "asc" },
+  });
   return NextResponse.json(grupos);
 }
 
@@ -28,11 +33,15 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Número e nome são obrigatórios." }, { status: 400 });
   }
 
-  const existe = await prisma.grupo.findUnique({ where: { numero: Number(numero) } });
+  const edicao = await getEdicaoAtiva();
+
+  const existe = await prisma.grupo.findUnique({
+    where: { edicaoId_numero: { edicaoId: edicao.id, numero: Number(numero) } },
+  });
   if (existe) return NextResponse.json({ error: "Número de grupo já existe." }, { status: 400 });
 
   const grupo = await prisma.grupo.create({
-    data: { numero: Number(numero), nome: nome.trim(), ativo: true },
+    data: { edicaoId: edicao.id, numero: Number(numero), nome: nome.trim(), ativo: true },
   });
 
   return NextResponse.json(grupo, { status: 201 });

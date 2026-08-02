@@ -14,6 +14,12 @@ async function main() {
     return;
   }
 
+  let edicao = await prisma.edicao.findFirst({ where: { ativa: true } });
+  if (!edicao) {
+    edicao = await prisma.edicao.create({ data: { nome: "CAP23", ativa: true } });
+    console.log(`✓ Edição "${edicao.nome}" criada`);
+  }
+
   const questoes = [
     {
       ordem: 1,
@@ -160,6 +166,7 @@ async function main() {
   for (const q of questoes) {
     await prisma.questao.create({
       data: {
+        edicaoId: edicao.id,
         texto: q.texto,
         tipo: q.tipo,
         pontos: q.pontos,

@@ -25,6 +25,11 @@ async function main() {
   await prisma.questao.deleteMany();
   await prisma.grupo.deleteMany();
   await prisma.configuracao.deleteMany();
+  await prisma.edicao.deleteMany();
+
+  // ── Edição ──────────────────────────────────────────────────────────────
+  const edicao = await prisma.edicao.create({ data: { nome: "CAP23", ativa: true } });
+  console.log(`✓ Edição "${edicao.nome}" criada`);
 
   // ── Grupos ──────────────────────────────────────────────────────────────
   const grupos = [
@@ -37,7 +42,7 @@ async function main() {
     { numero: 7, nome: "Nicole" },
   ];
   for (const g of grupos) {
-    await prisma.grupo.create({ data: { ...g, ativo: true } });
+    await prisma.grupo.create({ data: { ...g, edicaoId: edicao.id, ativo: true } });
   }
   console.log(`✓ ${grupos.length} grupos criados`);
 
@@ -57,7 +62,7 @@ async function main() {
     { chave: "prova_aberta", valor: "true" },
   ];
   for (const c of configuracoes) {
-    await prisma.configuracao.create({ data: c });
+    await prisma.configuracao.create({ data: { ...c, edicaoId: edicao.id } });
   }
   console.log(`✓ ${configuracoes.length} configurações criadas`);
 
@@ -208,6 +213,7 @@ async function main() {
   for (const q of questoes) {
     await prisma.questao.create({
       data: {
+        edicaoId: edicao.id,
         texto: q.texto,
         tipo: q.tipo,
         pontos: q.pontos,

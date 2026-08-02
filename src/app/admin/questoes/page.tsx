@@ -1,10 +1,13 @@
 import { prisma } from "@/lib/prisma";
+import { getEdicaoAtiva } from "@/lib/edicao";
 import Link from "next/link";
 
 export const dynamic = "force-dynamic";
 
 export default async function QuestoesPage() {
+  const edicao = await getEdicaoAtiva();
   const questoes = await prisma.questao.findMany({
+    where: { edicaoId: edicao.id },
     orderBy: { ordem: "asc" },
     include: { opcoes: { orderBy: { ordem: "asc" } } },
   });

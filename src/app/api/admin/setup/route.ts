@@ -15,9 +15,9 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Setup já concluído." }, { status: 403 });
   }
 
-  const { name, email, password } = await req.json();
+  const { name, email, password, edicaoNome } = await req.json();
 
-  if (!name?.trim() || !email?.trim() || !password) {
+  if (!name?.trim() || !email?.trim() || !password || !edicaoNome?.trim()) {
     return NextResponse.json({ error: "Todos os campos são obrigatórios." }, { status: 400 });
   }
 
@@ -36,7 +36,11 @@ export async function POST(req: NextRequest) {
     data: { name: name.trim(), email: email.trim().toLowerCase(), password: hashed, role: "ADMIN", ativo: true },
   });
 
-  // Cria as configurações padrão do sistema
+  const edicao = await prisma.edicao.create({
+    data: { nome: edicaoNome.trim(), ativa: true },
+  });
+
+  // Cria as configurações padrão da edição
   const configsDefault = [
     { chave: "prova_titulo", valor: "Prova Final das Alunas CAP" },
     { chave: "prova_descricao", valor: "Treinamento Conserto de Roupas Lucrativo" },
@@ -45,7 +49,7 @@ export async function POST(req: NextRequest) {
   ];
 
   for (const c of configsDefault) {
-    await prisma.configuracao.upsert({ where: { chave: c.chave }, update: {}, create: c });
+    await prisma.configuracao.create({ data: { edicaoId: edicao.id, ...c } });
   }
 
   return NextResponse.json({ ok: true });

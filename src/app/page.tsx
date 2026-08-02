@@ -1,16 +1,18 @@
 import { prisma } from "@/lib/prisma";
+import { getEdicaoAtiva } from "@/lib/edicao";
 import ProvaForm from "@/components/ProvaForm";
 import LogoHeader from "@/components/LogoHeader";
 
 export const dynamic = "force-dynamic";
 
-async function getConfigs() {
-  const rows = await prisma.configuracao.findMany();
+async function getConfigs(edicaoId: string) {
+  const rows = await prisma.configuracao.findMany({ where: { edicaoId } });
   return Object.fromEntries(rows.map((c) => [c.chave, c.valor]));
 }
 
 export default async function Home() {
-  const configs = await getConfigs();
+  const edicao = await getEdicaoAtiva();
+  const configs = await getConfigs(edicao.id);
 
   if (configs.prova_aberta === "false") {
     return (
@@ -32,7 +34,7 @@ export default async function Home() {
   }
 
   const questoes = await prisma.questao.findMany({
-    where: { ativa: true },
+    where: { edicaoId: edicao.id, ativa: true },
     orderBy: { ordem: "asc" },
     include: { opcoes: { orderBy: { ordem: "asc" } } },
   });

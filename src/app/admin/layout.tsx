@@ -52,6 +52,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
             <NavLink href="/admin/questoes" icon={<IconQuestoes />} pathname={pathname}>Questões</NavLink>
             <NavLink href="/admin/grupos" icon={<IconGrupos />} pathname={pathname}>Grupos</NavLink>
             <NavLink href="/admin/configuracoes" icon={<IconConfiguracoes />} pathname={pathname}>Configurações</NavLink>
+            <NavLink href="/admin/edicoes" icon={<IconEdicoes />} pathname={pathname}>Edições</NavLink>
             <NavLink href="/admin/usuarios" icon={<IconUsuarios />} pathname={pathname}>Usuários</NavLink>
           </nav>
 
@@ -150,6 +151,17 @@ function IconConfiguracoes() {
       <circle cx="15" cy="12" r="2" />
       <line x1="4" y1="18" x2="20" y2="18" />
       <circle cx="7" cy="18" r="2" />
+    </svg>
+  );
+}
+
+function IconEdicoes() {
+  return (
+    <svg {...iconProps}>
+      <rect x="4" y="5" width="16" height="15" rx="2" />
+      <line x1="4" y1="9.5" x2="20" y2="9.5" />
+      <line x1="8" y1="3" x2="8" y2="6.5" />
+      <line x1="16" y1="3" x2="16" y2="6.5" />
     </svg>
   );
 }

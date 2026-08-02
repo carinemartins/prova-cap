@@ -1,12 +1,16 @@
 import { prisma } from "@/lib/prisma";
+import { getEdicaoAtiva } from "@/lib/edicao";
 
 export const dynamic = "force-dynamic";
 
 export default async function AdminDashboard() {
+  const edicao = await getEdicaoAtiva();
+
   const [totalSubmissoes, totalQuestoes, ultimasSubmissoes] = await Promise.all([
-    prisma.submissao.count(),
-    prisma.questao.count({ where: { ativa: true } }),
+    prisma.submissao.count({ where: { edicaoId: edicao.id } }),
+    prisma.questao.count({ where: { edicaoId: edicao.id, ativa: true } }),
     prisma.submissao.findMany({
+      where: { edicaoId: edicao.id },
       orderBy: { createdAt: "desc" },
       take: 5,
       select: { id: true, nome: true, pontuacao: true, createdAt: true },
@@ -14,7 +18,7 @@ export default async function AdminDashboard() {
   ]);
 
   const mediaPontuacao = totalSubmissoes > 0
-    ? (await prisma.submissao.aggregate({ _avg: { pontuacao: true } }))._avg.pontuacao ?? 0
+    ? (await prisma.submissao.aggregate({ where: { edicaoId: edicao.id }, _avg: { pontuacao: true } }))._avg.pontuacao ?? 0
     : 0;
 
   return (
@@ -25,7 +29,10 @@ export default async function AdminDashboard() {
         <h1 className="text-2xl font-bold text-white" style={{ fontFamily: 'var(--font-playfair)' }}>
           Dashboard
         </h1>
-        <p className="text-sm text-white/40 mt-1">Visão geral das provas e alunas</p>
+        <p className="text-sm text-white/40 mt-1">
+          Visão geral das provas e alunas —{" "}
+          <span className="text-brand-gold font-medium">{edicao.nome}</span>
+        </p>
       </div>
 
       {/* Cards de stats */}

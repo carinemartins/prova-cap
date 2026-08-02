@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { getEdicaoAtiva } from "@/lib/edicao";
 
 export async function POST(req: NextRequest) {
   try {
@@ -9,22 +10,28 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Dados incompletos" }, { status: 400 });
     }
 
+    const edicao = await getEdicaoAtiva();
+
     // Verifica se a prova está aberta
-    const cfg = await prisma.configuracao.findUnique({ where: { chave: "prova_aberta" } });
+    const cfg = await prisma.configuracao.findUnique({
+      where: { edicaoId_chave: { edicaoId: edicao.id, chave: "prova_aberta" } },
+    });
     if (cfg?.valor === "false") {
       return NextResponse.json({ error: "A prova não está aceitando respostas no momento." }, { status: 403 });
     }
 
     // Valida o grupo se informado
     if (grupoId) {
-      const grupoExiste = await prisma.grupo.findUnique({ where: { id: grupoId, ativo: true } });
+      const grupoExiste = await prisma.grupo.findUnique({
+        where: { id: grupoId, edicaoId: edicao.id, ativo: true },
+      });
       if (!grupoExiste) {
         return NextResponse.json({ error: "Grupo inválido." }, { status: 400 });
       }
     }
 
     const questoes = await prisma.questao.findMany({
-      where: { ativa: true },
+      where: { edicaoId: edicao.id, ativa: true },
       include: { opcoes: true },
     });
 
@@ -32,6 +39,7 @@ export async function POST(req: NextRequest) {
 
     const submissao = await prisma.submissao.create({
       data: {
+        edicaoId: edicao.id,
         nome: nome.trim(),
         whatsapp: whatsapp.trim(),
         grupoId: grupoId ?? null,

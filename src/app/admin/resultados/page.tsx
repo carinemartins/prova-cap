@@ -1,5 +1,7 @@
 import { prisma } from "@/lib/prisma";
+import { getEdicaoAtiva } from "@/lib/edicao";
 import Link from "next/link";
+import EdicaoSelect from "@/components/EdicaoSelect";
 
 export const dynamic = "force-dynamic";
 
@@ -8,17 +10,23 @@ const PAGE_SIZE = 20;
 export default async function ResultadosPage({
   searchParams,
 }: {
-  searchParams: Promise<{ page?: string }>;
+  searchParams: Promise<{ page?: string; edicaoId?: string }>;
 }) {
-  const { page: pageParam } = await searchParams;
+  const { page: pageParam, edicaoId: edicaoIdParam } = await searchParams;
 
-  const totalSubmissoes = await prisma.submissao.count();
+  const [edicoes, edicaoAtiva] = await Promise.all([
+    prisma.edicao.findMany({ orderBy: { createdAt: "desc" } }),
+    getEdicaoAtiva(),
+  ]);
+  const edicaoId = edicaoIdParam && edicoes.some((e) => e.id === edicaoIdParam) ? edicaoIdParam : edicaoAtiva.id;
+
+  const totalSubmissoes = await prisma.submissao.count({ where: { edicaoId } });
   const totalPages = Math.max(1, Math.ceil(totalSubmissoes / PAGE_SIZE));
   const page = Math.min(Math.max(1, Number(pageParam) || 1), totalPages);
 
   const [questoes, submissoes] = await Promise.all([
     prisma.questao.findMany({
-      where: { ativa: true, tipo: { not: "ABERTA" } },
+      where: { edicaoId, ativa: true, tipo: { not: "ABERTA" } },
       orderBy: { ordem: "asc" },
       include: {
         opcoes: true,
@@ -26,6 +34,7 @@ export default async function ResultadosPage({
       },
     }),
     prisma.submissao.findMany({
+      where: { edicaoId },
       orderBy: { createdAt: "desc" },
       skip: (page - 1) * PAGE_SIZE,
       take: PAGE_SIZE,
@@ -43,12 +52,15 @@ export default async function ResultadosPage({
           <h1 className="text-2xl font-bold text-white" style={{ fontFamily: 'var(--font-playfair)' }}>Resultados</h1>
           <p className="text-sm text-white/40 mt-1">{totalSubmissoes} submissão(ões)</p>
         </div>
-        <a
-          href="/api/admin/export"
-          className="text-sm bg-brand-gold text-brand-dark font-semibold px-4 py-2.5 rounded-xl hover:bg-brand-gold-dark transition-colors"
-        >
-          Exportar CSV
-        </a>
+        <div className="flex items-center gap-3">
+          <EdicaoSelect edicoes={edicoes} selecionada={edicaoId} />
+          <a
+            href={`/api/admin/export?edicaoId=${edicaoId}`}
+            className="text-sm bg-brand-gold text-brand-dark font-semibold px-4 py-2.5 rounded-xl hover:bg-brand-gold-dark transition-colors whitespace-nowrap"
+          >
+            Exportar CSV
+          </a>
+        </div>
       </div>
 
       {/* Análise por questão */}
@@ -144,13 +156,13 @@ export default async function ResultadosPage({
           </table>
         </div>
 
-        {totalPages > 1 && <Paginacao page={page} totalPages={totalPages} />}
+        {totalPages > 1 && <Paginacao page={page} totalPages={totalPages} edicaoId={edicaoId} />}
       </section>
     </div>
   );
 }
 
-function Paginacao({ page, totalPages }: { page: number; totalPages: number }) {
+function Paginacao({ page, totalPages, edicaoId }: { page: number; totalPages: number; edicaoId: string }) {
   const janela = 2;
   const paginas = Array.from({ length: totalPages }, (_, i) => i + 1).filter(
     (n) => n === 1 || n === totalPages || Math.abs(n - page) <= janela
@@ -158,18 +170,18 @@ function Paginacao({ page, totalPages }: { page: number; totalPages: number }) {
 
   return (
     <div className="flex items-center justify-center gap-1.5 mt-4">
-      <PageLink page={page - 1} disabled={page <= 1}>
+      <PageLink page={page - 1} edicaoId={edicaoId} disabled={page <= 1}>
         ← Anterior
       </PageLink>
 
       {paginas.map((n, i) => (
         <span key={n} className="flex items-center gap-1.5">
           {i > 0 && paginas[i - 1] !== n - 1 && <span className="text-white/25 text-sm px-1">…</span>}
-          <PageLink page={n} ativo={n === page}>{n}</PageLink>
+          <PageLink page={n} edicaoId={edicaoId} ativo={n === page}>{n}</PageLink>
         </span>
       ))}
 
-      <PageLink page={page + 1} disabled={page >= totalPages}>
+      <PageLink page={page + 1} edicaoId={edicaoId} disabled={page >= totalPages}>
         Próxima →
       </PageLink>
     </div>
@@ -177,8 +189,8 @@ function Paginacao({ page, totalPages }: { page: number; totalPages: number }) {
 }
 
 function PageLink({
-  page, ativo, disabled, children,
-}: { page: number; ativo?: boolean; disabled?: boolean; children: React.ReactNode }) {
+  page, edicaoId, ativo, disabled, children,
+}: { page: number; edicaoId: string; ativo?: boolean; disabled?: boolean; children: React.ReactNode }) {
   const base = "min-w-9 h-9 px-2.5 flex items-center justify-center rounded-lg text-sm font-medium transition-colors";
 
   if (disabled) {
@@ -187,7 +199,7 @@ function PageLink({
 
   return (
     <Link
-      href={`/admin/resultados?page=${page}`}
+      href={`/admin/resultados?page=${page}&edicaoId=${edicaoId}`}
       className={`${base} ${
         ativo
           ? "bg-brand-gold text-brand-dark"
