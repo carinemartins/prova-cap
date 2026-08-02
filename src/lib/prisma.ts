@@ -13,6 +13,7 @@ function createPrismaClient(): PrismaClient {
     user: url.username,
     password: decodeURIComponent(url.password),
     database: url.pathname.slice(1),
+    allowPublicKeyRetrieval: true,
   });
   return new PrismaClient({
     adapter,
