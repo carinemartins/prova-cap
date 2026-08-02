@@ -10,6 +10,9 @@ export default function GruposPage() {
   const [nome, setNome] = useState("");
   const [erro, setErro] = useState("");
   const [saving, setSaving] = useState(false);
+  const [editandoId, setEditandoId] = useState<string | null>(null);
+  const [editNome, setEditNome] = useState("");
+  const [editSaving, setEditSaving] = useState(false);
 
   const carregar = useCallback(async () => {
     const res = await fetch("/api/admin/grupos");
@@ -45,6 +48,29 @@ export default function GruposPage() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ ativo: !g.ativo }),
     });
+    carregar();
+  }
+
+  function iniciarEdicao(g: Grupo) {
+    setEditandoId(g.id);
+    setEditNome(g.nome);
+  }
+
+  function cancelarEdicao() {
+    setEditandoId(null);
+    setEditNome("");
+  }
+
+  async function salvarEdicao(g: Grupo) {
+    if (!editNome.trim()) return;
+    setEditSaving(true);
+    await fetch(`/api/admin/grupos/${g.id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ nome: editNome.trim() }),
+    });
+    setEditSaving(false);
+    cancelarEdicao();
     carregar();
   }
 
@@ -122,32 +148,74 @@ export default function GruposPage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-white/8">
-              {grupos.map((g) => (
-                <tr key={g.id} className="hover:bg-white/[0.03] transition-colors">
-                  <td className="px-5 py-3.5 font-bold text-brand-gold">#{g.numero}</td>
-                  <td className="px-5 py-3.5 font-medium text-white/90">{g.nome}</td>
-                  <td className="px-5 py-3.5">
-                    <button
-                      onClick={() => toggleAtivo(g)}
-                      className={`text-xs px-2.5 py-1 rounded-full font-medium transition-colors ${
-                        g.ativo
-                          ? "bg-green-500/10 text-green-400 hover:bg-green-500/20"
-                          : "bg-brand-rose/10 text-brand-rose hover:bg-brand-rose/20"
-                      }`}
-                    >
-                      {g.ativo ? "Ativo" : "Inativo"}
-                    </button>
-                  </td>
-                  <td className="px-5 py-3.5 text-right">
-                    <button
-                      onClick={() => remover(g)}
-                      className="text-xs text-white/30 hover:text-brand-rose transition-colors"
-                    >
-                      Remover
-                    </button>
-                  </td>
-                </tr>
-              ))}
+              {grupos.map((g) => {
+                const editando = editandoId === g.id;
+                return (
+                  <tr key={g.id} className="hover:bg-white/[0.03] transition-colors">
+                    <td className="px-5 py-3.5 font-bold text-brand-gold">#{g.numero}</td>
+                    <td className="px-5 py-3.5 font-medium text-white/90">
+                      {editando ? (
+                        <input
+                          type="text"
+                          value={editNome}
+                          onChange={(e) => setEditNome(e.target.value)}
+                          autoFocus
+                          className="w-full bg-white/5 border border-white/10 rounded-lg px-2.5 py-1.5 text-sm text-white focus:outline-none focus:border-brand-gold/50 focus:ring-1 focus:ring-brand-gold/20 transition-colors"
+                        />
+                      ) : (
+                        g.nome
+                      )}
+                    </td>
+                    <td className="px-5 py-3.5">
+                      <button
+                        onClick={() => toggleAtivo(g)}
+                        className={`text-xs px-2.5 py-1 rounded-full font-medium transition-colors ${
+                          g.ativo
+                            ? "bg-green-500/10 text-green-400 hover:bg-green-500/20"
+                            : "bg-brand-rose/10 text-brand-rose hover:bg-brand-rose/20"
+                        }`}
+                      >
+                        {g.ativo ? "Ativo" : "Inativo"}
+                      </button>
+                    </td>
+                    <td className="px-5 py-3.5 text-right whitespace-nowrap">
+                      {editando ? (
+                        <span className="inline-flex gap-3">
+                          <button
+                            onClick={() => salvarEdicao(g)}
+                            disabled={editSaving}
+                            className="text-xs text-brand-gold hover:text-brand-gold-dark font-medium disabled:opacity-50"
+                          >
+                            {editSaving ? "Salvando..." : "Salvar"}
+                          </button>
+                          <button
+                            onClick={cancelarEdicao}
+                            disabled={editSaving}
+                            className="text-xs text-white/30 hover:text-white/60 transition-colors"
+                          >
+                            Cancelar
+                          </button>
+                        </span>
+                      ) : (
+                        <span className="inline-flex gap-3">
+                          <button
+                            onClick={() => iniciarEdicao(g)}
+                            className="text-xs text-brand-gold hover:text-brand-gold-dark font-medium"
+                          >
+                            Editar
+                          </button>
+                          <button
+                            onClick={() => remover(g)}
+                            className="text-xs text-white/30 hover:text-brand-rose transition-colors"
+                          >
+                            Remover
+                          </button>
+                        </span>
+                      )}
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         )}
