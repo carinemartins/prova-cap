@@ -27,7 +27,7 @@ export default function Certificado({ nome }: { nome: string }) {
     try {
       // 1. Carrega a imagem de fundo
       const img = new Image();
-      img.src = "/certificado-fundo.jpg";
+      img.src = "/certificado-fundo.png";
       await new Promise<void>((resolve, reject) => {
         img.onload  = () => resolve();
         img.onerror = () => reject(new Error("Imagem do certificado não encontrada."));
@@ -90,7 +90,7 @@ export default function Certificado({ nome }: { nome: string }) {
       <div className="w-full max-w-lg animate-[slideUp_0.5s_ease-out_0.15s_both] rounded-2xl overflow-hidden shadow-2xl shadow-black/40 relative">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
-          src="/certificado-fundo.jpg"
+          src="/certificado-fundo.png"
           alt="Certificado"
           className="w-full h-auto block"
           onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
