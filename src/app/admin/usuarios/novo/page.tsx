@@ -1,6 +1,18 @@
+import { getServerSession } from "@/lib/auth";
 import UsuarioForm from "@/components/UsuarioForm";
 
-export default function NovoUsuarioPage() {
+export const dynamic = "force-dynamic";
+
+export default async function NovoUsuarioPage() {
+  const session = await getServerSession();
+  if (session?.user?.role !== "ADMIN") {
+    return (
+      <div className="p-8 text-center text-white/40">
+        Acesso restrito a administradores.
+      </div>
+    );
+  }
+
   return (
     <div className="p-8 max-w-lg">
       <div className="mb-7">

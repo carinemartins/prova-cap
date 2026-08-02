@@ -1,10 +1,20 @@
 import { prisma } from "@/lib/prisma";
 import { notFound } from "next/navigation";
+import { getServerSession } from "@/lib/auth";
 import UsuarioForm from "@/components/UsuarioForm";
 
 export const dynamic = "force-dynamic";
 
 export default async function EditarUsuarioPage({ params }: { params: Promise<{ id: string }> }) {
+  const session = await getServerSession();
+  if (session?.user?.role !== "ADMIN") {
+    return (
+      <div className="p-8 text-center text-white/40">
+        Acesso restrito a administradores.
+      </div>
+    );
+  }
+
   const { id } = await params;
   const usuario = await prisma.user.findUnique({ where: { id } });
   if (!usuario) notFound();
