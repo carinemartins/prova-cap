@@ -39,6 +39,7 @@ model Edicao {
   questoes      Questao[]
   configuracoes Configuracao[]
   submissoes    Submissao[]
+  certificado   CertificadoModelo?
 }
 
 model Grupo {
@@ -62,6 +63,24 @@ model Configuracao {
   valor    String @db.Text
 
   @@unique([edicaoId, chave])
+}
+
+// Modelo do certificado de cada edição: imagem de fundo + posição do nome da aluna.
+// Posições e tamanho em % (nomeX/nomeY da imagem; fonteTamanho da largura).
+model CertificadoModelo {
+  id           String   @id @default(cuid())
+  edicaoId     String   @unique
+  edicao       Edicao   @relation(fields: [edicaoId], references: [id])
+  ativo        Boolean  @default(true)
+  imagem       Bytes?   @db.LongBlob
+  imagemTipo   String?
+  nomeX        Float    @default(12)
+  nomeY        Float    @default(32.4)
+  fonteTamanho Float    @default(3.4)
+  fonte        String   @default("Dancing Script")
+  cor          String   @default("#1a1208")
+  alinhamento  String   @default("left")
+  updatedAt    DateTime @updatedAt
 }
 
 model Questao {

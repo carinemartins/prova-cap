@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { getEdicaoAtiva } from "@/lib/edicao";
+import { getCertificadoLayout } from "@/lib/certificado-server";
 import ProvaForm from "@/components/ProvaForm";
 import LogoHeader from "@/components/LogoHeader";
 
@@ -45,6 +46,7 @@ export default async function Home() {
       titulo={configs.prova_titulo}
       descricao={configs.prova_descricao}
       mensagemSucesso={configs.prova_mensagem_sucesso}
+      certificado={await getCertificadoLayout(edicao.id)}
     />
   );
 }

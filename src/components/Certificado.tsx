@@ -1,57 +1,18 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { carregarFontes, estiloNome, gerarCertificadoPng, type CertificadoLayout } from "@/lib/certificado";
 
-// ─── AJUSTES DE POSIÇÃO DO NOME ─────────────────────────────────────────────
-const NOME_TOP  = "30%";   // sobe/desce o nome sobre o certificado
-const NOME_LEFT = "12%";   // move para esquerda/direita (50% = centro)
-const NOME_TAMANHO = 0.034; // tamanho da fonte ÷ largura da imagem (aumente para fonte maior)
-// ─────────────────────────────────────────────────────────────────────────────
-
-export default function Certificado({ nome }: { nome: string }) {
+// Posição, fonte e imagem vêm do modelo cadastrado em /admin/certificado.
+export default function Certificado({ nome, layout }: { nome: string; layout: CertificadoLayout }) {
   const [salvando, setSalvando] = useState(false);
 
-  useEffect(() => {
-    const id = "dancing-script-font";
-    if (!document.getElementById(id)) {
-      const link = document.createElement("link");
-      link.id = id;
-      link.rel = "stylesheet";
-      link.href = "https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&display=swap";
-      document.head.appendChild(link);
-    }
-  }, []);
+  useEffect(() => { carregarFontes(); }, []);
 
   async function salvarImagem() {
     setSalvando(true);
     try {
-      // 1. Carrega a imagem de fundo
-      const img = new Image();
-      img.src = "/certificado-fundo.png";
-      await new Promise<void>((resolve, reject) => {
-        img.onload  = () => resolve();
-        img.onerror = () => reject(new Error("Imagem do certificado não encontrada."));
-      });
-
-      // 2. Desenha no canvas
-      const canvas = document.createElement("canvas");
-      canvas.width  = img.naturalWidth;
-      canvas.height = img.naturalHeight;
-      const ctx = canvas.getContext("2d")!;
-      ctx.drawImage(img, 0, 0);
-
-      // 3. Escreve o nome com a fonte cursiva
-      const fontSize = Math.round(canvas.width * NOME_TAMANHO);
-      await document.fonts.load(`bold ${fontSize}px "Dancing Script"`);
-      ctx.font         = `bold ${fontSize}px "Dancing Script", cursive`;
-      ctx.fillStyle    = "#1a1208";
-      ctx.textBaseline = "top";
-      const x = canvas.width  * (parseFloat(NOME_LEFT) / 100);
-      const y = canvas.height * (parseFloat(NOME_TOP)  / 100);
-      ctx.fillText(nome, x, y);
-
-      // 4. Compartilha ou baixa
-      const blob = await new Promise<Blob>((res) => canvas.toBlob((b) => res(b!), "image/png"));
+      const blob = await gerarCertificadoPng(layout, nome);
       const file = new File([blob], "certificado-cap.png", { type: "image/png" });
 
       const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
@@ -87,29 +48,18 @@ export default function Certificado({ nome }: { nome: string }) {
       </div>
 
       {/* Preview */}
-      <div className="w-full max-w-lg animate-[slideUp_0.5s_ease-out_0.15s_both] rounded-2xl overflow-hidden shadow-2xl shadow-black/40 relative">
+      <div
+        className="w-full max-w-lg animate-[slideUp_0.5s_ease-out_0.15s_both] rounded-2xl overflow-hidden shadow-2xl shadow-black/40 relative"
+        style={{ containerType: "inline-size" }}
+      >
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
-          src="/certificado-fundo.png"
+          src={layout.imagemUrl}
           alt="Certificado"
           className="w-full h-auto block"
           onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
         />
-        <div className="absolute inset-0 pointer-events-none">
-          <div className="absolute" style={{ top: NOME_TOP, left: NOME_LEFT }}>
-            <span
-              style={{
-                fontFamily: "'Dancing Script', cursive",
-                fontSize: "clamp(14px, 3.5vw, 28px)",
-                fontWeight: 700,
-                color: "#1a1208",
-                whiteSpace: "nowrap",
-              }}
-            >
-              {nome}
-            </span>
-          </div>
-        </div>
+        <span className="pointer-events-none" style={estiloNome(layout)}>{nome}</span>
       </div>
 
       <button
@@ -121,7 +71,7 @@ export default function Certificado({ nome }: { nome: string }) {
       </button>
 
       <p className="text-white/20 text-xs text-center animate-[slideUp_0.5s_ease-out_0.4s_both]">
-        No celular, escolha "Salvar na Galeria" após tocar no botão.
+        No celular, escolha &quot;Salvar na Galeria&quot; após tocar no botão.
       </p>
     </div>
   );

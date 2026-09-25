@@ -51,6 +51,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
             <NavLink href="/admin/resultados" icon={<IconResultados />} pathname={pathname}>Resultados</NavLink>
             <NavLink href="/admin/questoes" icon={<IconQuestoes />} pathname={pathname}>Questões</NavLink>
             <NavLink href="/admin/grupos" icon={<IconGrupos />} pathname={pathname}>Grupos</NavLink>
+            <NavLink href="/admin/certificado" icon={<IconCertificado />} pathname={pathname}>Certificado</NavLink>
             <NavLink href="/admin/configuracoes" icon={<IconConfiguracoes />} pathname={pathname}>Configurações</NavLink>
             <NavLink href="/admin/edicoes" icon={<IconEdicoes />} pathname={pathname}>Edições</NavLink>
             <NavLink href="/admin/usuarios" icon={<IconUsuarios />} pathname={pathname}>Usuários</NavLink>
@@ -171,6 +172,18 @@ function IconUsuarios() {
     <svg {...iconProps}>
       <circle cx="12" cy="8" r="3.5" />
       <path d="M4.5 20C4.5 15.5 7.8 12.8 12 12.8C16.2 12.8 19.5 15.5 19.5 20" />
+    </svg>
+  );
+}
+
+function IconCertificado() {
+  return (
+    <svg {...iconProps}>
+      <rect x="3.5" y="4.5" width="17" height="12" rx="1.5" />
+      <line x1="7" y1="8.5" x2="17" y2="8.5" />
+      <line x1="7" y1="12" x2="12" y2="12" />
+      <circle cx="16" cy="17" r="2.5" />
+      <path d="M14.8 19.2L14 22L16 21L18 22L17.2 19.2" />
     </svg>
   );
 }

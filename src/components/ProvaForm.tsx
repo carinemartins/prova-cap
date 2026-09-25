@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import LogoHeader from "./LogoHeader";
 import Certificado from "./Certificado";
+import type { CertificadoLayout } from "@/lib/certificado";
 
 type Opcao   = { id: string; texto: string; ordem: number };
 type Questao = {
@@ -17,6 +18,7 @@ type Props = {
   titulo?: string;
   descricao?: string;
   mensagemSucesso?: string;
+  certificado: CertificadoLayout;
 };
 
 /**
@@ -27,7 +29,7 @@ type Props = {
  *   N+2     → grupo (se houver)
  *   enviado → sucesso
  */
-export default function ProvaForm({ questoes, descricao, mensagemSucesso }: Props) {
+export default function ProvaForm({ questoes, descricao, mensagemSucesso, certificado }: Props) {
   const [step,     setStep]     = useState(0);
   const [animKey,  setAnimKey]  = useState(0);
   const [nome,     setNome]     = useState("");
@@ -104,7 +106,8 @@ export default function ProvaForm({ questoes, descricao, mensagemSucesso }: Prop
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error ?? "Erro ao enviar.");
-      setCertificadoNome(nome.trim());
+      if (certificado.ativo) setCertificadoNome(nome.trim());
+      else setEnviado(true);
     } catch (err) {
       setErro(err instanceof Error ? err.message : "Erro ao enviar. Tente novamente.");
     } finally {
@@ -112,7 +115,7 @@ export default function ProvaForm({ questoes, descricao, mensagemSucesso }: Prop
     }
   }
 
-  if (certificadoNome) return <Certificado nome={certificadoNome} />;
+  if (certificadoNome) return <Certificado nome={certificadoNome} layout={certificado} />;
   if (enviado) return <Sucesso mensagem={mensagemSucesso} />;
 
   // ═══════════════════════════════════════════════
