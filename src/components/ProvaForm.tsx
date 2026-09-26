@@ -29,7 +29,7 @@ type Props = {
  *   N+2     → grupo (se houver)
  *   enviado → sucesso
  */
-export default function ProvaForm({ questoes, descricao, mensagemSucesso, certificado }: Props) {
+export default function ProvaForm({ questoes, titulo, descricao, mensagemSucesso, certificado }: Props) {
   const [step,     setStep]     = useState(0);
   const [animKey,  setAnimKey]  = useState(0);
   const [nome,     setNome]     = useState("");
@@ -296,7 +296,7 @@ export default function ProvaForm({ questoes, descricao, mensagemSucesso, certif
               <div className="space-y-2">
                 <p className="text-brand-gold text-[11px] font-bold tracking-[0.3em] uppercase">Prova Final</p>
                 <h1 className="text-white text-[26px] font-bold leading-tight" style={{ fontFamily: "var(--font-playfair)" }}>
-                  Treinamento Conserto<br />de Roupas Lucrativo
+                  {titulo?.trim() || <>Treinamento Conserto<br />de Roupas Lucrativo</>}
                 </h1>
                 <p className="text-white/40 text-sm">Prof. Carine Martins ✂️</p>
               </div>
