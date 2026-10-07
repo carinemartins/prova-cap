@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from "react";
 import LogoHeader from "./LogoHeader";
 import Certificado from "./Certificado";
 import type { CertificadoLayout } from "@/lib/certificado";
+import { emailValido } from "@/lib/email";
 
 type Opcao   = { id: string; texto: string; ordem: number; permiteTexto: boolean };
 type Questao = {
@@ -83,7 +84,7 @@ export default function ProvaForm({ questoes, modo, ebookTitulo, titulo, descric
   function handleIdentidadeNext() {
     if (!nome.trim())     { setErro("Por favor, informe seu nome."); return; }
     if (!whatsapp.trim()) { setErro("Por favor, informe seu WhatsApp."); return; }
-    if (pesquisa && !/^[^s@]+@[^s@]+.[^s@]+$/.test(email.trim())) { setErro("Por favor, informe um e-mail válido."); return; }
+    if (pesquisa && !emailValido(email)) { setErro("Por favor, informe um e-mail válido."); return; }
     goTo(step + 1);
   }
 

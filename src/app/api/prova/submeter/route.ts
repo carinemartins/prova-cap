@@ -2,8 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getEdicaoAtiva } from "@/lib/edicao";
 import { getEbook } from "@/lib/ebook";
-
-const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+import { emailValido, limparEmail } from "@/lib/email";
 
 export async function POST(req: NextRequest) {
   try {
@@ -30,8 +29,8 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: msg }, { status: 403 });
     }
 
-    const emailLimpo = typeof email === "string" ? email.trim() : "";
-    if (pesquisa && !EMAIL_RE.test(emailLimpo)) {
+    const emailLimpo = typeof email === "string" ? limparEmail(email) : "";
+    if (pesquisa && !emailValido(emailLimpo)) {
       return NextResponse.json({ error: "Informe um e-mail válido." }, { status: 400 });
     }
 
