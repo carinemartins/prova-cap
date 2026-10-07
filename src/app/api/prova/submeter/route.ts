@@ -3,9 +3,13 @@ import { prisma } from "@/lib/prisma";
 import { getEdicaoAtiva } from "@/lib/edicao";
 import { getEbook } from "@/lib/ebook";
 
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
 export async function POST(req: NextRequest) {
   try {
-    const { nome, whatsapp, grupoId, respostas } = await req.json();
+    // respostas: { [questaoId]: opcaoId | opcaoId[] (múltipla seleção) | texto (aberta) }
+    // outros:    { [questaoId]: texto digitado na opção "Outro" }
+    const { nome, whatsapp, email, grupoId, respostas, outros = {} } = await req.json();
 
     if (!nome?.trim() || !whatsapp?.trim() || !respostas) {
       return NextResponse.json({ error: "Dados incompletos" }, { status: 400 });
@@ -26,6 +30,11 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: msg }, { status: 403 });
     }
 
+    const emailLimpo = typeof email === "string" ? email.trim() : "";
+    if (pesquisa && !EMAIL_RE.test(emailLimpo)) {
+      return NextResponse.json({ error: "Informe um e-mail válido." }, { status: 400 });
+    }
+
     // Valida o grupo se informado
     if (grupoId) {
       const grupoExiste = await prisma.grupo.findUnique({
@@ -42,34 +51,46 @@ export async function POST(req: NextRequest) {
     });
 
     let pontuacao = 0;
+    const linhas: { questaoId: string; opcaoId: string | null; textoLivre: string | null }[] = [];
+
+    for (const q of questoes) {
+      const resposta = respostas[q.id];
+      const outro = typeof outros[q.id] === "string" ? outros[q.id].trim() : "";
+
+      if (q.tipo === "ABERTA") {
+        linhas.push({ questaoId: q.id, opcaoId: null, textoLivre: typeof resposta === "string" ? resposta.trim() : null });
+        continue;
+      }
+
+      // Só aceita opções que pertencem à questão
+      const marcadas = (Array.isArray(resposta) ? resposta : [resposta])
+        .map((id) => q.opcoes.find((o) => o.id === id))
+        .filter((o) => o !== undefined)
+        .slice(0, q.tipo === "MULTIPLA_SELECAO" ? undefined : 1);
+
+      if (marcadas.length === 0) {
+        linhas.push({ questaoId: q.id, opcaoId: null, textoLivre: null });
+        continue;
+      }
+
+      for (const o of new Set(marcadas)) {
+        linhas.push({ questaoId: q.id, opcaoId: o.id, textoLivre: o.permiteTexto && outro ? outro : null });
+      }
+
+      if (!pesquisa && q.tipo !== "MULTIPLA_SELECAO" && marcadas[0].correta) pontuacao += q.pontos;
+    }
 
     const submissao = await prisma.submissao.create({
       data: {
         edicaoId: edicao.id,
         nome: nome.trim(),
         whatsapp: whatsapp.trim(),
+        email: emailLimpo || null,
         grupoId: grupoId ?? null,
-        respostas: {
-          create: questoes.map((q) => {
-            const resposta = respostas[q.id];
-            let opcaoId: string | null = null;
-            let textoLivre: string | null = null;
-
-            if (q.tipo === "ABERTA") {
-              textoLivre = typeof resposta === "string" ? resposta.trim() : null;
-            } else {
-              opcaoId = typeof resposta === "string" ? resposta : null;
-              const opcaoCorreta = q.opcoes.find((o) => o.id === opcaoId && o.correta);
-              if (opcaoCorreta && !pesquisa) pontuacao += q.pontos;
-            }
-
-            return { questaoId: q.id, opcaoId, textoLivre };
-          }),
-        },
+        pontuacao,
+        respostas: { create: linhas },
       },
     });
-
-    await prisma.submissao.update({ where: { id: submissao.id }, data: { pontuacao } });
 
     // Na pesquisa, o link do ebook só existe depois do envio (leva o id da submissão)
     const ebook = pesquisa && (await getEbook(edicao.id))

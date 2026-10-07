@@ -41,7 +41,7 @@ export default async function QuestoesPage() {
               <p className="text-sm font-medium text-white/90 mb-2 line-clamp-2">{q.texto}</p>
               <div className="flex gap-2 flex-wrap">
                 <span className="text-xs bg-brand-gold/15 text-brand-gold rounded-full px-2.5 py-0.5 font-medium">
-                  {q.tipo === "MULTIPLA_ESCOLHA" ? "Múltipla escolha" : q.tipo === "VERDADEIRO_FALSO" ? "V/F" : "Aberta"}
+                  {{ MULTIPLA_ESCOLHA: "Múltipla escolha", MULTIPLA_SELECAO: "Várias opções", VERDADEIRO_FALSO: "V/F", ABERTA: "Aberta" }[q.tipo]}
                 </span>
                 {!pesquisa && (
                   <span className="text-xs bg-white/8 text-white/55 rounded-full px-2.5 py-0.5">
@@ -57,7 +57,7 @@ export default async function QuestoesPage() {
                   {q.opcoes.map((op) => (
                     <li key={op.id} className={`text-xs flex gap-1.5 items-center ${op.correta && !pesquisa ? "text-brand-gold font-medium" : "text-white/35"}`}>
                       <span>{op.correta && !pesquisa ? "✓" : "○"}</span>
-                      {op.texto}
+                      {op.texto}{op.permiteTexto && <span className="text-white/25">(com texto)</span>}
                     </li>
                   ))}
                 </ul>

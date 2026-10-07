@@ -3,12 +3,12 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 
-type Opcao = { id?: string; texto: string; correta: boolean; ordem: number };
+type Opcao = { id?: string; texto: string; correta: boolean; permiteTexto?: boolean; ordem: number };
 
 type Questao = {
   id: string;
   texto: string;
-  tipo: "MULTIPLA_ESCOLHA" | "VERDADEIRO_FALSO" | "ABERTA";
+  tipo: "MULTIPLA_ESCOLHA" | "VERDADEIRO_FALSO" | "ABERTA" | "MULTIPLA_SELECAO";
   pontos: number;
   ordem: number;
   ativa: boolean;
@@ -19,6 +19,7 @@ type Props = { questao?: Questao; pesquisa?: boolean };
 
 const TIPOS = [
   { value: "MULTIPLA_ESCOLHA", label: "Múltipla escolha" },
+  { value: "MULTIPLA_SELECAO", label: "Marcar várias opções" },
   { value: "VERDADEIRO_FALSO", label: "Verdadeiro ou Falso" },
   { value: "ABERTA", label: "Resposta aberta" },
 ];
@@ -45,6 +46,9 @@ export default function QuestaoForm({ questao, pesquisa }: Props) {
   const [deleting, setDeleting] = useState(false);
   const [erro, setErro] = useState("");
 
+  // Pesquisa e "marcar várias" não têm opção correta nem pontuação
+  const semGabarito = pesquisa || tipo === "MULTIPLA_SELECAO";
+
   function addOpcao() {
     setOpcoes((prev) => [...prev, { texto: "", correta: false, ordem: prev.length + 1 }]);
   }
@@ -58,7 +62,10 @@ export default function QuestaoForm({ questao, pesquisa }: Props) {
   }
 
   function handleTipoChange(novoTipo: Questao["tipo"]) {
+    const comListaLivre = (t: Questao["tipo"]) => t === "MULTIPLA_ESCOLHA" || t === "MULTIPLA_SELECAO";
+    const tipoAnterior = tipo;
     setTipo(novoTipo);
+    if (comListaLivre(novoTipo) && comListaLivre(tipoAnterior)) return; // mantém as opções digitadas
     if (novoTipo === "VERDADEIRO_FALSO") setOpcoes(VF_OPCOES);
     else if (novoTipo === "ABERTA") setOpcoes([]);
     else setOpcoes([{ texto: "", correta: false, ordem: 1 }, { texto: "", correta: false, ordem: 2 }]);
@@ -70,7 +77,7 @@ export default function QuestaoForm({ questao, pesquisa }: Props) {
     if (tipo !== "ABERTA" && opcoes.filter((o) => o.texto.trim()).length < 2) {
       setErro("Adicione pelo menos 2 opções."); return;
     }
-    if (!pesquisa && tipo !== "ABERTA" && !opcoes.some((o) => o.correta)) {
+    if (!semGabarito && tipo !== "ABERTA" && !opcoes.some((o) => o.correta)) {
       setErro("Marque a opção correta."); return;
     }
 
@@ -84,8 +91,8 @@ export default function QuestaoForm({ questao, pesquisa }: Props) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           texto, tipo, ordem, ativa,
-          pontos: pesquisa ? 0 : pontos,
-          opcoes: pesquisa ? opcoes.map((o) => ({ ...o, correta: false })) : opcoes,
+          pontos: semGabarito ? 0 : pontos,
+          opcoes: semGabarito ? opcoes.map((o) => ({ ...o, correta: false })) : opcoes,
         }),
       });
 
@@ -124,7 +131,7 @@ export default function QuestaoForm({ questao, pesquisa }: Props) {
         />
       </div>
 
-      <div className={`grid gap-4 ${pesquisa ? "grid-cols-2" : "grid-cols-3"}`}>
+      <div className={`grid gap-4 ${semGabarito ? "grid-cols-2" : "grid-cols-3"}`}>
         <div>
           <label className="block text-xs font-semibold text-white/40 uppercase tracking-wider mb-1.5">Tipo</label>
           <select
@@ -135,7 +142,7 @@ export default function QuestaoForm({ questao, pesquisa }: Props) {
             {TIPOS.map((t) => <option key={t.value} value={t.value}>{t.label}</option>)}
           </select>
         </div>
-        {!pesquisa && (
+        {!semGabarito && (
           <div>
             <label className="block text-xs font-semibold text-white/40 uppercase tracking-wider mb-1.5">Pontos</label>
             <input
@@ -173,12 +180,15 @@ export default function QuestaoForm({ questao, pesquisa }: Props) {
       {tipo !== "ABERTA" && (
         <div>
           <label className="block text-xs font-semibold text-white/40 uppercase tracking-wider mb-2">
-            Opções {!pesquisa && <span className="normal-case text-white/25">(marque a correta)</span>}
+            Opções {!semGabarito && <span className="normal-case text-white/25">(marque a correta)</span>}
           </label>
+          {tipo !== "VERDADEIRO_FALSO" && (
+            <p className="text-xs text-white/30 mb-2">Marque &quot;Outro&quot; na opção em que a pessoa deve escrever a resposta.</p>
+          )}
           <div className="space-y-2">
             {opcoes.map((op, idx) => (
               <div key={idx} className="flex items-center gap-2">
-                {!pesquisa && (
+                {!semGabarito && (
                   <input
                     type="radio"
                     name="correta"
@@ -195,6 +205,17 @@ export default function QuestaoForm({ questao, pesquisa }: Props) {
                   className="flex-1 bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-sm text-white placeholder-white/25 focus:outline-none focus:border-brand-gold/50 focus:ring-1 focus:ring-brand-gold/20 transition-colors disabled:bg-white/[0.02] disabled:text-white/40"
                   placeholder={`Opção ${idx + 1}`}
                 />
+                {tipo !== "VERDADEIRO_FALSO" && (
+                  <label className="flex items-center gap-1 text-xs text-white/40 whitespace-nowrap cursor-pointer" title="Ao marcar esta opção, a pessoa escreve um texto">
+                    <input
+                      type="checkbox"
+                      checked={op.permiteTexto ?? false}
+                      onChange={(e) => setOpcoes((prev) => prev.map((o, i) => i === idx ? { ...o, permiteTexto: e.target.checked } : o))}
+                      className="accent-brand-gold"
+                    />
+                    Outro
+                  </label>
+                )}
                 {tipo !== "VERDADEIRO_FALSO" && opcoes.length > 2 && (
                   <button
                     type="button"
@@ -207,7 +228,7 @@ export default function QuestaoForm({ questao, pesquisa }: Props) {
               </div>
             ))}
           </div>
-          {tipo === "MULTIPLA_ESCOLHA" && (
+          {(tipo === "MULTIPLA_ESCOLHA" || tipo === "MULTIPLA_SELECAO") && (
             <button
               type="button"
               onClick={addOpcao}

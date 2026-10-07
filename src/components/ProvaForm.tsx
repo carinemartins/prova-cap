@@ -5,10 +5,10 @@ import LogoHeader from "./LogoHeader";
 import Certificado from "./Certificado";
 import type { CertificadoLayout } from "@/lib/certificado";
 
-type Opcao   = { id: string; texto: string; ordem: number };
+type Opcao   = { id: string; texto: string; ordem: number; permiteTexto: boolean };
 type Questao = {
   id: string; texto: string;
-  tipo: "MULTIPLA_ESCOLHA" | "VERDADEIRO_FALSO" | "ABERTA";
+  tipo: "MULTIPLA_ESCOLHA" | "VERDADEIRO_FALSO" | "ABERTA" | "MULTIPLA_SELECAO";
   pontos: number; ordem: number; opcoes: Opcao[];
 };
 type Grupo = { id: string; numero: number; nome: string };
@@ -29,7 +29,7 @@ type Props = {
 /**
  * Steps:
  *   0       → boas-vindas (logo + foto + info)
- *   1       → identidade (nome + whatsapp)
+ *   1       → identidade (nome + whatsapp [+ e-mail na pesquisa])
  *   2..N+1  → questões
  *   N+2     → grupo (se houver)
  *   enviado → sucesso
@@ -40,8 +40,11 @@ export default function ProvaForm({ questoes, modo, ebookTitulo, titulo, descric
   const [animKey,  setAnimKey]  = useState(0);
   const [nome,     setNome]     = useState("");
   const [whatsapp, setWhatsapp] = useState("");
+  const [email,    setEmail]    = useState("");
   const [grupoId,  setGrupoId]  = useState<string | null>(null);
-  const [respostas, setRespostas] = useState<Record<string, string>>({});
+  const [respostas, setRespostas] = useState<Record<string, string>>({});   // escolha única e aberta
+  const [selecoes,  setSelecoes]  = useState<Record<string, string[]>>({}); // múltipla seleção
+  const [outros,    setOutros]    = useState<Record<string, string>>({});   // texto da opção "Outro"
   const [grupos,   setGrupos]   = useState<Grupo[]>([]);
   const [enviando,       setEnviando]       = useState(false);
   const [enviado,        setEnviado]        = useState(false);
@@ -80,6 +83,7 @@ export default function ProvaForm({ questoes, modo, ebookTitulo, titulo, descric
   function handleIdentidadeNext() {
     if (!nome.trim())     { setErro("Por favor, informe seu nome."); return; }
     if (!whatsapp.trim()) { setErro("Por favor, informe seu WhatsApp."); return; }
+    if (pesquisa && !/^[^s@]+@[^s@]+.[^s@]+$/.test(email.trim())) { setErro("Por favor, informe um e-mail válido."); return; }
     goTo(step + 1);
   }
 
@@ -88,11 +92,30 @@ export default function ProvaForm({ questoes, modo, ebookTitulo, titulo, descric
     setErro("");
   }
 
+  function handleSelecaoToggle(questaoId: string, opcaoId: string) {
+    setSelecoes((p) => {
+      const atual = p[questaoId] ?? [];
+      return { ...p, [questaoId]: atual.includes(opcaoId) ? atual.filter((id) => id !== opcaoId) : [...atual, opcaoId] };
+    });
+    setErro("");
+  }
+
+  function marcadas(q: Questao): string[] {
+    if (q.tipo === "MULTIPLA_SELECAO") return selecoes[q.id] ?? [];
+    return respostas[q.id] ? [respostas[q.id]] : [];
+  }
+
+  /** Opção "Outro" marcada na questão (pede um texto) */
+  function outroMarcado(q: Questao) {
+    const ids = marcadas(q);
+    return q.opcoes.find((o) => o.permiteTexto && ids.includes(o.id));
+  }
+
   function handleConfirmar() {
     if (!questaoAtual) return;
-    const r = respostas;
-    if (!r[questaoAtual.id]) { setErro("Selecione uma opção antes de continuar."); return; }
-    if (isLastQ && !hasGrupos) submitForm(r);
+    if (marcadas(questaoAtual).length === 0) { setErro("Selecione uma opção antes de continuar."); return; }
+    if (outroMarcado(questaoAtual) && !outros[questaoAtual.id]?.trim()) { setErro("Escreva sua resposta em \"Outro\"."); return; }
+    if (isLastQ && !hasGrupos) submitForm(respostas);
     else goTo(step + 1);
   }
 
@@ -112,7 +135,7 @@ export default function ProvaForm({ questoes, modo, ebookTitulo, titulo, descric
     try {
       const res  = await fetch("/api/prova/submeter", {
         method: "POST", headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ nome, whatsapp, grupoId, respostas: r }),
+        body: JSON.stringify({ nome, whatsapp, email, grupoId, respostas: { ...r, ...selecoes }, outros }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error ?? "Erro ao enviar.");
@@ -136,7 +159,10 @@ export default function ProvaForm({ questoes, modo, ebookTitulo, titulo, descric
   // QUESTÃO — layout tela cheia (estilo quiz)
   // ═══════════════════════════════════════════════
   if (questaoAtual) {
-    const sel = respostas[questaoAtual.id];
+    const multipla = questaoAtual.tipo === "MULTIPLA_SELECAO";
+    const ids = marcadas(questaoAtual);
+    const sel = ids.length > 0;
+    const outro = outroMarcado(questaoAtual);
 
     return (
       <div key={animKey} className="min-h-screen bg-brand-dark flex flex-col animate-slide-up">
@@ -226,13 +252,18 @@ export default function ProvaForm({ questoes, modo, ebookTitulo, titulo, descric
               </div>
             ) : (
               <div className="flex flex-col gap-3">
-                {questaoAtual.opcoes.map((op) => {
+                {multipla && (
+                  <p className="text-white/40 text-sm -mt-1">Pode marcar mais de uma opção.</p>
+                )}
+                {questaoAtual.opcoes.map((op, i) => {
                   const { letra, conteudo } = parsearOpcao(op.texto);
-                  const ativa = sel === op.id;
+                  const ativa = ids.includes(op.id);
                   return (
                     <button
                       key={op.id}
-                      onClick={() => handleOpcaoSelect(questaoAtual.id, op.id)}
+                      onClick={() => multipla
+                        ? handleSelecaoToggle(questaoAtual.id, op.id)
+                        : handleOpcaoSelect(questaoAtual.id, op.id)}
                       className={`w-full text-left flex items-center gap-4 px-5 py-5 rounded-2xl border-2 text-base font-medium transition-all duration-200 active:scale-[0.99] ${
                         ativa
                           ? "bg-brand-gold/15 border-brand-gold text-white"
@@ -242,15 +273,26 @@ export default function ProvaForm({ questoes, modo, ebookTitulo, titulo, descric
                       <span className={`flex items-center justify-center w-9 h-9 rounded-xl text-sm font-bold shrink-0 transition-all ${
                         ativa ? "bg-brand-gold text-brand-dark" : "bg-white/8 text-white/40"
                       }`}>
-                        {ativa ? "✓" : letra}
+                        {ativa ? "✓" : letra || String.fromCharCode(65 + i)}
                       </span>
                       <span className="leading-snug">{conteudo}</span>
                     </button>
                   );
                 })}
 
+                {outro && (
+                  <input
+                    type="text"
+                    value={outros[questaoAtual.id] ?? ""}
+                    onChange={(e) => { setOutros((p) => ({ ...p, [questaoAtual.id]: e.target.value })); setErro(""); }}
+                    placeholder="Escreva aqui…"
+                    autoFocus
+                    className="w-full bg-white/[0.05] border border-brand-gold/40 rounded-2xl px-5 py-4 text-white text-base placeholder-white/25 focus:outline-none focus:border-brand-gold/60 focus:ring-1 focus:ring-brand-gold/20 transition-all"
+                  />
+                )}
+
                 {/* Botão confirmar — desliza para cima após selecionar */}
-                <div className={`transition-all duration-300 overflow-hidden ${sel ? "max-h-32 opacity-100 mt-1" : "max-h-0 opacity-0"}`}>
+                <div className={`transition-all duration-300 overflow-hidden ${sel ? "max-h-48 opacity-100 mt-1" : "max-h-0 opacity-0"}`}>
                   {erro && <MsgErro>{erro}</MsgErro>}
                   <button
                     onClick={handleConfirmar}
@@ -339,8 +381,8 @@ export default function ProvaForm({ questoes, modo, ebookTitulo, titulo, descric
               )}
 
               {descricao && (
-                <p className="text-white/45 text-sm leading-relaxed max-w-xs">
-                  {descricao.split("\n")[0]}
+                <p className={`text-white/45 text-sm leading-relaxed ${pesquisa ? "whitespace-pre-line text-left max-w-sm" : "max-w-xs"}`}>
+                  {pesquisa ? descricao : descricao.split("\n")[0]}
                 </p>
               )}
 
@@ -379,6 +421,12 @@ export default function ProvaForm({ questoes, modo, ebookTitulo, titulo, descric
                   <InputTexto type="tel" value={whatsapp} onChange={setWhatsapp}
                     placeholder="(11) 99999-9999" onEnter={handleIdentidadeNext} mask="telefone" />
                 </Campo>
+                {pesquisa && (
+                  <Campo label="Qual é o seu e-mail?" obrigatorio>
+                    <InputTexto type="email" value={email} onChange={setEmail}
+                      placeholder="seuemail@exemplo.com" onEnter={handleIdentidadeNext} />
+                  </Campo>
+                )}
               </div>
 
               {erro && <MsgErro>{erro}</MsgErro>}

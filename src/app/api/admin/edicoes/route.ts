@@ -59,7 +59,7 @@ export async function POST(req: NextRequest) {
             ordem: q.ordem,
             ativa: q.ativa,
             opcoes: {
-              create: q.opcoes.map((o) => ({ texto: o.texto, correta: o.correta, ordem: o.ordem })),
+              create: q.opcoes.map((o) => ({ texto: o.texto, correta: o.correta, permiteTexto: o.permiteTexto, ordem: o.ordem })),
             },
           },
         });

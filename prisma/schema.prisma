@@ -16,6 +16,7 @@ enum TipoQuestao {
   MULTIPLA_ESCOLHA
   VERDADEIRO_FALSO
   ABERTA
+  MULTIPLA_SELECAO // marcar várias opções; gera uma Resposta por opção marcada
 }
 
 model User {
@@ -130,6 +131,8 @@ model Opcao {
   id        String     @id @default(cuid())
   texto     String
   correta   Boolean    @default(false)
+  // Opção do tipo "Outro": ao marcar, a pessoa escreve um texto (Resposta.textoLivre)
+  permiteTexto Boolean @default(false)
   ordem     Int
   questaoId String
   questao   Questao    @relation(fields: [questaoId], references: [id], onDelete: Cascade)
@@ -142,6 +145,7 @@ model Submissao {
   edicao    Edicao     @relation(fields: [edicaoId], references: [id])
   nome      String
   whatsapp  String
+  email     String?
   grupoId   String?
   grupo     Grupo?     @relation(fields: [grupoId], references: [id])
   pontuacao Int        @default(0)
@@ -161,5 +165,5 @@ model Resposta {
   questao   Questao   @relation(fields: [questaoId], references: [id])
   opcao     Opcao?    @relation(fields: [opcaoId], references: [id])
 
-  @@unique([submissaoId, questaoId])
+  @@index([submissaoId, questaoId])
 }

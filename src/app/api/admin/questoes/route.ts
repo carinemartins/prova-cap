@@ -21,9 +21,10 @@ export async function POST(req: NextRequest) {
       opcoes: {
         create: opcoes
           .filter((o: { texto: string }) => o.texto.trim())
-          .map((o: { texto: string; correta: boolean; ordem: number }) => ({
+          .map((o: { texto: string; correta: boolean; permiteTexto?: boolean; ordem: number }) => ({
             texto: o.texto.trim(),
             correta: o.correta,
+            permiteTexto: o.permiteTexto === true,
             ordem: o.ordem,
           })),
       },

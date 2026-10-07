@@ -29,21 +29,30 @@ export async function GET(req: NextRequest) {
   });
 
   const pesquisa = (await getModo(edicaoId)) === "pesquisa";
-  const headers = ["Nome", "WhatsApp", "Grupo", ...(pesquisa ? [] : ["Pontuação"]), "Data", ...questoes.map((q) => `Q${q.ordem}`)];
+  const headers = [
+    "Nome", "WhatsApp",
+    ...(pesquisa ? ["E-mail"] : ["Grupo", "Pontuação"]),
+    "Data",
+    // Na pesquisa o cabeçalho leva a pergunta inteira, para ler a planilha sem consultar o sistema
+    ...questoes.map((q) => (pesquisa ? q.texto.replace(/\s+/g, " ").trim() : `Q${q.ordem}`)),
+  ];
 
   const rows = submissoes.map((s) => {
-    const respostaMap = Object.fromEntries(s.respostas.map((r) => [r.questaoId, r]));
     return [
       s.nome,
       s.whatsapp,
-      s.grupo ? `#${s.grupo.numero} ${s.grupo.nome}` : "",
-      ...(pesquisa ? [] : [s.pontuacao]),
+      ...(pesquisa
+        ? [s.email ?? ""]
+        : [s.grupo ? `#${s.grupo.numero} ${s.grupo.nome}` : "", s.pontuacao]),
       new Date(s.createdAt).toLocaleString("pt-BR"),
-      ...questoes.map((q) => {
-        const r = respostaMap[q.id];
-        if (!r) return "";
-        return r.textoLivre ?? r.opcao?.texto ?? "";
-      }),
+      ...questoes.map((q) =>
+        // "Marcar várias" gera uma linha por opção; ficam juntas na mesma célula
+        s.respostas
+          .filter((r) => r.questaoId === q.id)
+          .map((r) => (r.opcao ? (r.textoLivre ? `${r.opcao.texto}: ${r.textoLivre}` : r.opcao.texto) : r.textoLivre ?? ""))
+          .filter(Boolean)
+          .join("; ")
+      ),
     ].map((v) => `"${String(v).replace(/"/g, '""')}"`);
   });
 

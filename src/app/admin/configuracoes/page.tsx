@@ -139,11 +139,10 @@ export default function ConfiguracoesPage() {
           <label className="block text-xs font-semibold text-white/40 uppercase tracking-wider mb-1.5">
             Descrição / subtítulo
           </label>
-          <input
-            type="text"
+          <textarea
             value={descricao}
             onChange={(e) => setDescricao(e.target.value)}
-            className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm text-white placeholder-white/25 focus:outline-none focus:border-brand-gold/50 focus:ring-1 focus:ring-brand-gold/20 transition-colors"
+            className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm text-white placeholder-white/25 focus:outline-none focus:border-brand-gold/50 focus:ring-1 focus:ring-brand-gold/20 transition-colors min-h-[80px] resize-y"
             placeholder="Ex: Treinamento Conserto de Roupas Lucrativo"
           />
         </div>

@@ -72,7 +72,8 @@ export default async function ResultadosPage({
         <h2 className="text-base font-semibold text-white mb-4">Análise por questão</h2>
         <div className="space-y-4">
           {questoes.map((q) => {
-            const total = q.respostas.length;
+            // Nas de "marcar várias" cada pessoa gera várias linhas: conta pessoas, não linhas
+            const total = new Set(q.respostas.map((r) => r.submissaoId)).size;
             return (
               <div key={q.id} className="bg-white/[0.03] rounded-2xl border border-white/10 p-5">
                 <p className="text-sm font-medium text-white/90 mb-3">
@@ -124,7 +125,7 @@ export default async function ResultadosPage({
             <thead>
               <tr>
                 <th className="text-left px-5 py-3 text-xs font-semibold text-white/35 uppercase tracking-wider">Nome</th>
-                <th className="text-left px-5 py-3 text-xs font-semibold text-white/35 uppercase tracking-wider">WhatsApp</th>
+                <th className="text-left px-5 py-3 text-xs font-semibold text-white/35 uppercase tracking-wider">{pesquisa ? "Contato" : "WhatsApp"}</th>
                 <th className="text-left px-5 py-3 text-xs font-semibold text-white/35 uppercase tracking-wider">Grupo</th>
                 {!pesquisa && <th className="text-left px-5 py-3 text-xs font-semibold text-white/35 uppercase tracking-wider">Pontuação</th>}
                 <th className="text-left px-5 py-3 text-xs font-semibold text-white/35 uppercase tracking-wider">Data</th>
@@ -135,7 +136,10 @@ export default async function ResultadosPage({
               {submissoes.map((s) => (
                 <tr key={s.id} className="hover:bg-white/[0.03] transition-colors">
                   <td className="px-5 py-3.5 font-medium text-white/90">{s.nome}</td>
-                  <td className="px-5 py-3.5 text-white/55">{s.whatsapp}</td>
+                  <td className="px-5 py-3.5 text-white/55">
+                    {s.whatsapp}
+                    {s.email && <span className="block text-xs text-white/35">{s.email}</span>}
+                  </td>
                   <td className="px-5 py-3.5 text-white/55">{s.grupo ? `#${s.grupo.numero} ${s.grupo.nome}` : "—"}</td>
                   {!pesquisa && (
                     <td className="px-5 py-3.5">
