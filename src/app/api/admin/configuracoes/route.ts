@@ -22,7 +22,21 @@ export async function PUT(req: NextRequest) {
   const body: Record<string, string> = await req.json();
   const edicao = await getEdicaoAtiva();
 
-  const allowed = ["prova_titulo", "prova_descricao", "prova_mensagem_sucesso", "prova_aberta"];
+  const allowed = [
+    "prova_titulo", "prova_descricao", "prova_mensagem_sucesso", "prova_aberta",
+    "modo", "ebook_titulo", "ebook_url",
+  ];
+
+  if ("modo" in body && body.modo !== "prova" && body.modo !== "pesquisa") {
+    return NextResponse.json({ error: "Modo inválido." }, { status: 400 });
+  }
+  const ebookUrl = String(body.ebook_url ?? "").trim();
+  if (ebookUrl && !/^https?:\/\//i.test(ebookUrl)) {
+    return NextResponse.json({ error: "O link do ebook deve começar com http:// ou https://" }, { status: 400 });
+  }
+  if (body.modo === "pesquisa" && !ebookUrl) {
+    return NextResponse.json({ error: "Informe o link do ebook para o modo pesquisa." }, { status: 400 });
+  }
 
   for (const chave of allowed) {
     if (chave in body) {

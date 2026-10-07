@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { getModo } from "@/lib/edicao";
 import { getEdicaoAtiva } from "@/lib/edicao";
 
 export async function GET(req: NextRequest) {
@@ -27,7 +28,8 @@ export async function GET(req: NextRequest) {
     orderBy: { ordem: "asc" },
   });
 
-  const headers = ["Nome", "WhatsApp", "Grupo", "Pontuação", "Data", ...questoes.map((q) => `Q${q.ordem}`)];
+  const pesquisa = (await getModo(edicaoId)) === "pesquisa";
+  const headers = ["Nome", "WhatsApp", "Grupo", ...(pesquisa ? [] : ["Pontuação"]), "Data", ...questoes.map((q) => `Q${q.ordem}`)];
 
   const rows = submissoes.map((s) => {
     const respostaMap = Object.fromEntries(s.respostas.map((r) => [r.questaoId, r]));
@@ -35,7 +37,7 @@ export async function GET(req: NextRequest) {
       s.nome,
       s.whatsapp,
       s.grupo ? `#${s.grupo.numero} ${s.grupo.nome}` : "",
-      s.pontuacao,
+      ...(pesquisa ? [] : [s.pontuacao]),
       new Date(s.createdAt).toLocaleString("pt-BR"),
       ...questoes.map((q) => {
         const r = respostaMap[q.id];

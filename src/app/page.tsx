@@ -14,6 +14,7 @@ async function getConfigs(edicaoId: string) {
 export default async function Home() {
   const edicao = await getEdicaoAtiva();
   const configs = await getConfigs(edicao.id);
+  const modo = configs.modo === "pesquisa" ? "pesquisa" : "prova";
 
   if (configs.prova_aberta === "false") {
     return (
@@ -24,10 +25,10 @@ export default async function Home() {
             className="text-white text-2xl font-bold"
             style={{ fontFamily: "var(--font-playfair)" }}
           >
-            Prova encerrada
+            {modo === "pesquisa" ? "Pesquisa encerrada" : "Prova encerrada"}
           </h1>
           <p className="text-white/35 text-sm">
-            A prova não está aceitando respostas no momento.
+            {modo === "pesquisa" ? "A pesquisa" : "A prova"} não está aceitando respostas no momento.
           </p>
         </div>
       </main>
@@ -43,6 +44,8 @@ export default async function Home() {
   return (
     <ProvaForm
       questoes={questoes}
+      modo={modo}
+      ebookTitulo={configs.ebook_titulo}
       titulo={configs.prova_titulo}
       descricao={configs.prova_descricao}
       mensagemSucesso={configs.prova_mensagem_sucesso}

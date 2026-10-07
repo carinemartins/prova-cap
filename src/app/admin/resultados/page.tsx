@@ -1,5 +1,5 @@
 import { prisma } from "@/lib/prisma";
-import { getEdicaoAtiva } from "@/lib/edicao";
+import { getEdicaoAtiva, getModo } from "@/lib/edicao";
 import Link from "next/link";
 import EdicaoSelect from "@/components/EdicaoSelect";
 
@@ -20,7 +20,11 @@ export default async function ResultadosPage({
   ]);
   const edicaoId = edicaoIdParam && edicoes.some((e) => e.id === edicaoIdParam) ? edicaoIdParam : edicaoAtiva.id;
 
-  const totalSubmissoes = await prisma.submissao.count({ where: { edicaoId } });
+  const [totalSubmissoes, modo] = await Promise.all([
+    prisma.submissao.count({ where: { edicaoId } }),
+    getModo(edicaoId),
+  ]);
+  const pesquisa = modo === "pesquisa";
   const totalPages = Math.max(1, Math.ceil(totalSubmissoes / PAGE_SIZE));
   const page = Math.min(Math.max(1, Number(pageParam) || 1), totalPages);
 
@@ -79,17 +83,18 @@ export default async function ResultadosPage({
                   {q.opcoes.map((op) => {
                     const count = q.respostas.filter((r) => r.opcaoId === op.id).length;
                     const pct = total > 0 ? Math.round((count / total) * 100) : 0;
+                    const correta = op.correta && !pesquisa;
                     return (
                       <div key={op.id}>
                         <div className="flex justify-between text-xs mb-1">
-                          <span className={op.correta ? "text-brand-gold font-semibold" : "text-white/55"}>
-                            {op.correta ? "✓ " : "○ "}{op.texto}
+                          <span className={correta ? "text-brand-gold font-semibold" : "text-white/55"}>
+                            {correta ? "✓ " : "○ "}{op.texto}
                           </span>
                           <span className="text-white/35">{count} ({pct}%)</span>
                         </div>
                         <div className="h-1.5 bg-white/8 rounded-full overflow-hidden">
                           <div
-                            className={`h-full rounded-full transition-all ${op.correta ? "bg-brand-gold" : "bg-brand-rose/50"}`}
+                            className={`h-full rounded-full transition-all ${correta || pesquisa ? "bg-brand-gold" : "bg-brand-rose/50"}`}
                             style={{ width: `${pct}%` }}
                           />
                         </div>
@@ -121,7 +126,7 @@ export default async function ResultadosPage({
                 <th className="text-left px-5 py-3 text-xs font-semibold text-white/35 uppercase tracking-wider">Nome</th>
                 <th className="text-left px-5 py-3 text-xs font-semibold text-white/35 uppercase tracking-wider">WhatsApp</th>
                 <th className="text-left px-5 py-3 text-xs font-semibold text-white/35 uppercase tracking-wider">Grupo</th>
-                <th className="text-left px-5 py-3 text-xs font-semibold text-white/35 uppercase tracking-wider">Pontuação</th>
+                {!pesquisa && <th className="text-left px-5 py-3 text-xs font-semibold text-white/35 uppercase tracking-wider">Pontuação</th>}
                 <th className="text-left px-5 py-3 text-xs font-semibold text-white/35 uppercase tracking-wider">Data</th>
                 <th className="px-5 py-3"></th>
               </tr>
@@ -132,9 +137,11 @@ export default async function ResultadosPage({
                   <td className="px-5 py-3.5 font-medium text-white/90">{s.nome}</td>
                   <td className="px-5 py-3.5 text-white/55">{s.whatsapp}</td>
                   <td className="px-5 py-3.5 text-white/55">{s.grupo ? `#${s.grupo.numero} ${s.grupo.nome}` : "—"}</td>
-                  <td className="px-5 py-3.5">
-                    <span className="font-semibold text-brand-gold">{s.pontuacao} pts</span>
-                  </td>
+                  {!pesquisa && (
+                    <td className="px-5 py-3.5">
+                      <span className="font-semibold text-brand-gold">{s.pontuacao} pts</span>
+                    </td>
+                  )}
                   <td className="px-5 py-3.5 text-white/35 text-xs">
                     {new Date(s.createdAt).toLocaleString("pt-BR")}
                   </td>
@@ -147,7 +154,7 @@ export default async function ResultadosPage({
               ))}
               {submissoes.length === 0 && (
                 <tr>
-                  <td colSpan={6} className="px-5 py-12 text-center text-white/25">
+                  <td colSpan={pesquisa ? 5 : 6} className="px-5 py-12 text-center text-white/25">
                     Nenhuma submissão ainda.
                   </td>
                 </tr>

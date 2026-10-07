@@ -1,10 +1,11 @@
 import { prisma } from "@/lib/prisma";
-import { getEdicaoAtiva } from "@/lib/edicao";
+import { getEdicaoAtiva, getModo } from "@/lib/edicao";
 
 export const dynamic = "force-dynamic";
 
 export default async function AdminDashboard() {
   const edicao = await getEdicaoAtiva();
+  const pesquisa = (await getModo(edicao.id)) === "pesquisa";
 
   const [totalSubmissoes, totalQuestoes, ultimasSubmissoes] = await Promise.all([
     prisma.submissao.count({ where: { edicaoId: edicao.id } }),
@@ -37,8 +38,10 @@ export default async function AdminDashboard() {
 
       {/* Cards de stats */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
-        <StatCard label="Provas enviadas" value={totalSubmissoes} icon="📋" />
-        <StatCard label="Média de pontuação" value={mediaPontuacao.toFixed(1)} icon="⭐" />
+        <StatCard label={pesquisa ? "Respostas recebidas" : "Provas enviadas"} value={totalSubmissoes} icon="📋" />
+        {pesquisa
+          ? <StatCard label="Modo" value="Pesquisa" icon="📘" />
+          : <StatCard label="Média de pontuação" value={mediaPontuacao.toFixed(1)} icon="⭐" />}
         <StatCard label="Questões ativas" value={totalQuestoes} icon="✏️" />
       </div>
 
@@ -54,7 +57,7 @@ export default async function AdminDashboard() {
           <thead>
             <tr>
               <th className="text-left px-6 py-3 text-xs font-semibold text-white/35 uppercase tracking-wider">Nome</th>
-              <th className="text-left px-6 py-3 text-xs font-semibold text-white/35 uppercase tracking-wider">Pontuação</th>
+              {!pesquisa && <th className="text-left px-6 py-3 text-xs font-semibold text-white/35 uppercase tracking-wider">Pontuação</th>}
               <th className="text-left px-6 py-3 text-xs font-semibold text-white/35 uppercase tracking-wider">Data</th>
             </tr>
           </thead>
@@ -62,11 +65,13 @@ export default async function AdminDashboard() {
             {ultimasSubmissoes.map((s: { id: string; nome: string; pontuacao: number; createdAt: Date }) => (
               <tr key={s.id} className="hover:bg-white/[0.03] transition-colors">
                 <td className="px-6 py-3.5 font-medium text-white/90">{s.nome}</td>
-                <td className="px-6 py-3.5">
-                  <span className="inline-flex items-center gap-1 text-brand-gold font-semibold">
-                    {s.pontuacao} pts
-                  </span>
-                </td>
+                {!pesquisa && (
+                  <td className="px-6 py-3.5">
+                    <span className="inline-flex items-center gap-1 text-brand-gold font-semibold">
+                      {s.pontuacao} pts
+                    </span>
+                  </td>
+                )}
                 <td className="px-6 py-3.5 text-white/35 text-xs">
                   {new Date(s.createdAt).toLocaleDateString("pt-BR")}
                 </td>
@@ -74,7 +79,7 @@ export default async function AdminDashboard() {
             ))}
             {ultimasSubmissoes.length === 0 && (
               <tr>
-                <td colSpan={3} className="px-6 py-12 text-center text-white/25">
+                <td colSpan={pesquisa ? 2 : 3} className="px-6 py-12 text-center text-white/25">
                   Nenhuma resposta ainda.
                 </td>
               </tr>

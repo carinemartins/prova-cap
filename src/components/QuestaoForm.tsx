@@ -15,7 +15,7 @@ type Questao = {
   opcoes: Opcao[];
 };
 
-type Props = { questao?: Questao };
+type Props = { questao?: Questao; pesquisa?: boolean };
 
 const TIPOS = [
   { value: "MULTIPLA_ESCOLHA", label: "Múltipla escolha" },
@@ -28,7 +28,7 @@ const VF_OPCOES: Opcao[] = [
   { texto: "b) Falso", correta: false, ordem: 2 },
 ];
 
-export default function QuestaoForm({ questao }: Props) {
+export default function QuestaoForm({ questao, pesquisa }: Props) {
   const router = useRouter();
   const [texto, setTexto] = useState(questao?.texto ?? "");
   const [tipo, setTipo] = useState<Questao["tipo"]>(questao?.tipo ?? "MULTIPLA_ESCOLHA");
@@ -70,7 +70,7 @@ export default function QuestaoForm({ questao }: Props) {
     if (tipo !== "ABERTA" && opcoes.filter((o) => o.texto.trim()).length < 2) {
       setErro("Adicione pelo menos 2 opções."); return;
     }
-    if (tipo !== "ABERTA" && !opcoes.some((o) => o.correta)) {
+    if (!pesquisa && tipo !== "ABERTA" && !opcoes.some((o) => o.correta)) {
       setErro("Marque a opção correta."); return;
     }
 
@@ -82,7 +82,11 @@ export default function QuestaoForm({ questao }: Props) {
       const res = await fetch(url, {
         method,
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ texto, tipo, pontos, ordem, ativa, opcoes }),
+        body: JSON.stringify({
+          texto, tipo, ordem, ativa,
+          pontos: pesquisa ? 0 : pontos,
+          opcoes: pesquisa ? opcoes.map((o) => ({ ...o, correta: false })) : opcoes,
+        }),
       });
 
       if (!res.ok) throw new Error();
@@ -120,7 +124,7 @@ export default function QuestaoForm({ questao }: Props) {
         />
       </div>
 
-      <div className="grid grid-cols-3 gap-4">
+      <div className={`grid gap-4 ${pesquisa ? "grid-cols-2" : "grid-cols-3"}`}>
         <div>
           <label className="block text-xs font-semibold text-white/40 uppercase tracking-wider mb-1.5">Tipo</label>
           <select
@@ -131,16 +135,18 @@ export default function QuestaoForm({ questao }: Props) {
             {TIPOS.map((t) => <option key={t.value} value={t.value}>{t.label}</option>)}
           </select>
         </div>
-        <div>
-          <label className="block text-xs font-semibold text-white/40 uppercase tracking-wider mb-1.5">Pontos</label>
-          <input
-            type="number"
-            min={0}
-            value={pontos}
-            onChange={(e) => setPontos(Number(e.target.value))}
-            className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-3 text-sm text-white focus:outline-none focus:border-brand-gold/50 focus:ring-1 focus:ring-brand-gold/20 transition-colors"
-          />
-        </div>
+        {!pesquisa && (
+          <div>
+            <label className="block text-xs font-semibold text-white/40 uppercase tracking-wider mb-1.5">Pontos</label>
+            <input
+              type="number"
+              min={0}
+              value={pontos}
+              onChange={(e) => setPontos(Number(e.target.value))}
+              className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-3 text-sm text-white focus:outline-none focus:border-brand-gold/50 focus:ring-1 focus:ring-brand-gold/20 transition-colors"
+            />
+          </div>
+        )}
         <div>
           <label className="block text-xs font-semibold text-white/40 uppercase tracking-wider mb-1.5">Ordem</label>
           <input
@@ -167,18 +173,20 @@ export default function QuestaoForm({ questao }: Props) {
       {tipo !== "ABERTA" && (
         <div>
           <label className="block text-xs font-semibold text-white/40 uppercase tracking-wider mb-2">
-            Opções <span className="normal-case text-white/25">(marque a correta)</span>
+            Opções {!pesquisa && <span className="normal-case text-white/25">(marque a correta)</span>}
           </label>
           <div className="space-y-2">
             {opcoes.map((op, idx) => (
               <div key={idx} className="flex items-center gap-2">
-                <input
-                  type="radio"
-                  name="correta"
-                  checked={op.correta}
-                  onChange={() => setOpcaoCorreta(idx)}
-                  className="accent-brand-gold shrink-0"
-                />
+                {!pesquisa && (
+                  <input
+                    type="radio"
+                    name="correta"
+                    checked={op.correta}
+                    onChange={() => setOpcaoCorreta(idx)}
+                    className="accent-brand-gold shrink-0"
+                  />
+                )}
                 <input
                   type="text"
                   value={op.texto}

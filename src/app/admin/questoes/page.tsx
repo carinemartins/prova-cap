@@ -1,11 +1,12 @@
 import { prisma } from "@/lib/prisma";
-import { getEdicaoAtiva } from "@/lib/edicao";
+import { getEdicaoAtiva, getModo } from "@/lib/edicao";
 import Link from "next/link";
 
 export const dynamic = "force-dynamic";
 
 export default async function QuestoesPage() {
   const edicao = await getEdicaoAtiva();
+  const pesquisa = (await getModo(edicao.id)) === "pesquisa";
   const questoes = await prisma.questao.findMany({
     where: { edicaoId: edicao.id },
     orderBy: { ordem: "asc" },
@@ -42,9 +43,11 @@ export default async function QuestoesPage() {
                 <span className="text-xs bg-brand-gold/15 text-brand-gold rounded-full px-2.5 py-0.5 font-medium">
                   {q.tipo === "MULTIPLA_ESCOLHA" ? "Múltipla escolha" : q.tipo === "VERDADEIRO_FALSO" ? "V/F" : "Aberta"}
                 </span>
-                <span className="text-xs bg-white/8 text-white/55 rounded-full px-2.5 py-0.5">
-                  {q.pontos} {q.pontos === 1 ? "ponto" : "pontos"}
-                </span>
+                {!pesquisa && (
+                  <span className="text-xs bg-white/8 text-white/55 rounded-full px-2.5 py-0.5">
+                    {q.pontos} {q.pontos === 1 ? "ponto" : "pontos"}
+                  </span>
+                )}
                 {!q.ativa && (
                   <span className="text-xs bg-brand-rose/10 text-brand-rose rounded-full px-2.5 py-0.5">Inativa</span>
                 )}
@@ -52,8 +55,8 @@ export default async function QuestoesPage() {
               {q.opcoes.length > 0 && (
                 <ul className="mt-2.5 space-y-1">
                   {q.opcoes.map((op) => (
-                    <li key={op.id} className={`text-xs flex gap-1.5 items-center ${op.correta ? "text-brand-gold font-medium" : "text-white/35"}`}>
-                      <span>{op.correta ? "✓" : "○"}</span>
+                    <li key={op.id} className={`text-xs flex gap-1.5 items-center ${op.correta && !pesquisa ? "text-brand-gold font-medium" : "text-white/35"}`}>
+                      <span>{op.correta && !pesquisa ? "✓" : "○"}</span>
                       {op.texto}
                     </li>
                   ))}

@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import { notFound } from "next/navigation";
 import Link from "next/link";
+import { getModo } from "@/lib/edicao";
 
 export const dynamic = "force-dynamic";
 
@@ -22,6 +23,7 @@ export default async function SubmissaoPage({ params }: { params: Promise<{ id: 
   });
 
   if (!submissao) notFound();
+  const pesquisa = (await getModo(submissao.edicaoId)) === "pesquisa";
 
   return (
     <div className="p-8 max-w-3xl">
@@ -36,9 +38,11 @@ export default async function SubmissaoPage({ params }: { params: Promise<{ id: 
         <p className="text-sm text-white/40">
           Enviado em: {new Date(submissao.createdAt).toLocaleString("pt-BR")}
         </p>
-        <p className="text-2xl font-bold text-brand-gold mt-3">
-          {submissao.pontuacao} pontos
-        </p>
+        {!pesquisa && (
+          <p className="text-2xl font-bold text-brand-gold mt-3">
+            {submissao.pontuacao} pontos
+          </p>
+        )}
       </div>
 
       <div className="space-y-4">
@@ -52,6 +56,8 @@ export default async function SubmissaoPage({ params }: { params: Promise<{ id: 
 
               {r.textoLivre ? (
                 <p className="text-sm text-white/60 bg-white/5 rounded-xl px-3 py-2">{r.textoLivre}</p>
+              ) : pesquisa ? (
+                <p className="text-sm font-medium text-white/75">{r.opcao?.texto ?? "Sem resposta"}</p>
               ) : (
                 <div>
                   <p className={`text-sm font-medium ${acertou ? "text-green-400" : "text-brand-rose"}`}>

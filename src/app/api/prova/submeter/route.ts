@@ -12,12 +12,17 @@ export async function POST(req: NextRequest) {
 
     const edicao = await getEdicaoAtiva();
 
-    // Verifica se a prova está aberta
-    const cfg = await prisma.configuracao.findUnique({
-      where: { edicaoId_chave: { edicaoId: edicao.id, chave: "prova_aberta" } },
-    });
-    if (cfg?.valor === "false") {
-      return NextResponse.json({ error: "A prova não está aceitando respostas no momento." }, { status: 403 });
+    const cfgs = Object.fromEntries(
+      (await prisma.configuracao.findMany({
+        where: { edicaoId: edicao.id, chave: { in: ["prova_aberta", "modo", "ebook_url", "ebook_titulo"] } },
+      })).map((c) => [c.chave, c.valor])
+    );
+    const pesquisa = cfgs.modo === "pesquisa";
+
+    // Verifica se a prova/pesquisa está aberta
+    if (cfgs.prova_aberta === "false") {
+      const msg = pesquisa ? "A pesquisa não está aceitando respostas no momento." : "A prova não está aceitando respostas no momento.";
+      return NextResponse.json({ error: msg }, { status: 403 });
     }
 
     // Valida o grupo se informado
@@ -54,7 +59,7 @@ export async function POST(req: NextRequest) {
             } else {
               opcaoId = typeof resposta === "string" ? resposta : null;
               const opcaoCorreta = q.opcoes.find((o) => o.id === opcaoId && o.correta);
-              if (opcaoCorreta) pontuacao += q.pontos;
+              if (opcaoCorreta && !pesquisa) pontuacao += q.pontos;
             }
 
             return { questaoId: q.id, opcaoId, textoLivre };
@@ -65,7 +70,12 @@ export async function POST(req: NextRequest) {
 
     await prisma.submissao.update({ where: { id: submissao.id }, data: { pontuacao } });
 
-    return NextResponse.json({ ok: true, submissaoId: submissao.id, pontuacao });
+    // Na pesquisa, o link do ebook só é revelado depois do envio
+    const ebook = pesquisa && cfgs.ebook_url
+      ? { url: cfgs.ebook_url, titulo: cfgs.ebook_titulo || null }
+      : null;
+
+    return NextResponse.json({ ok: true, submissaoId: submissao.id, pontuacao, ebook });
   } catch (err) {
     console.error(err);
     return NextResponse.json({ error: "Erro interno" }, { status: 500 });

@@ -13,8 +13,13 @@ type Questao = {
 };
 type Grupo = { id: string; numero: number; nome: string };
 
+type Ebook = { url: string; titulo: string | null };
+
 type Props = {
   questoes: Questao[];
+  /** "pesquisa": sem pontuação nem grupos; no final entrega um ebook em vez do certificado */
+  modo: "prova" | "pesquisa";
+  ebookTitulo?: string;
   titulo?: string;
   descricao?: string;
   mensagemSucesso?: string;
@@ -29,7 +34,8 @@ type Props = {
  *   N+2     → grupo (se houver)
  *   enviado → sucesso
  */
-export default function ProvaForm({ questoes, titulo, descricao, mensagemSucesso, certificado }: Props) {
+export default function ProvaForm({ questoes, modo, ebookTitulo, titulo, descricao, mensagemSucesso, certificado }: Props) {
+  const pesquisa = modo === "pesquisa";
   const [step,     setStep]     = useState(0);
   const [animKey,  setAnimKey]  = useState(0);
   const [nome,     setNome]     = useState("");
@@ -40,18 +46,22 @@ export default function ProvaForm({ questoes, titulo, descricao, mensagemSucesso
   const [enviando,       setEnviando]       = useState(false);
   const [enviado,        setEnviado]        = useState(false);
   const [certificadoNome, setCertificadoNome] = useState<string | null>(null);
+  const [ebook,          setEbook]          = useState<Ebook | null>(null);
   const [erro,           setErro]           = useState("");
   const [fotoOk,   setFotoOk]   = useState(true);
   const autoRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
-    fetch("/api/prova/grupos")
-      .then((r) => r.json())
-      .then((d) => setGrupos(Array.isArray(d) ? d : []));
+    if (!pesquisa) {
+      fetch("/api/prova/grupos")
+        .then((r) => r.json())
+        .then((d) => setGrupos(Array.isArray(d) ? d : []));
+    }
     return () => { if (autoRef.current) clearTimeout(autoRef.current); };
-  }, []);
+  }, [pesquisa]);
 
-  const hasGrupos   = grupos.length > 0;
+  const hasGrupos   = !pesquisa && grupos.length > 0;
+  const enviarLabel = pesquisa ? "Enviar respostas" : "Enviar prova";
   const totalQ      = questoes.length;
   const questaoIdx  = step - 2;
   const questaoAtual = questaoIdx >= 0 && questaoIdx < totalQ ? questoes[questaoIdx] : null;
@@ -106,7 +116,10 @@ export default function ProvaForm({ questoes, titulo, descricao, mensagemSucesso
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error ?? "Erro ao enviar.");
-      if (certificado.ativo) setCertificadoNome(nome.trim());
+      if (pesquisa) {
+        if (data.ebook) setEbook(data.ebook);
+        else setEnviado(true);
+      } else if (certificado.ativo) setCertificadoNome(nome.trim());
       else setEnviado(true);
     } catch (err) {
       setErro(err instanceof Error ? err.message : "Erro ao enviar. Tente novamente.");
@@ -116,7 +129,8 @@ export default function ProvaForm({ questoes, titulo, descricao, mensagemSucesso
   }
 
   if (certificadoNome) return <Certificado nome={certificadoNome} layout={certificado} />;
-  if (enviado) return <Sucesso mensagem={mensagemSucesso} />;
+  if (ebook) return <EbookPronto ebook={ebook} mensagem={mensagemSucesso} />;
+  if (enviado) return <Sucesso mensagem={mensagemSucesso} pesquisa={pesquisa} />;
 
   // ═══════════════════════════════════════════════
   // QUESTÃO — layout tela cheia (estilo quiz)
@@ -164,7 +178,7 @@ export default function ProvaForm({ questoes, titulo, descricao, mensagemSucesso
               ))}
             </div>
 
-            {questaoAtual.pontos > 0 ? (
+            {!pesquisa && questaoAtual.pontos > 0 ? (
               <span className="text-[11px] font-bold text-brand-gold border border-brand-gold/30 rounded-full px-2.5 py-1">
                 ⭐ {questaoAtual.pontos} pt
               </span>
@@ -180,7 +194,7 @@ export default function ProvaForm({ questoes, titulo, descricao, mensagemSucesso
           {/* Número + pergunta */}
           <div className="flex-1 flex flex-col justify-center gap-5 py-6 max-w-lg mx-auto w-full">
             <span className="text-brand-gold/50 text-sm font-bold tracking-widest uppercase">
-              Questão {questaoAtual.ordem} de {totalQ}
+              {pesquisa ? "Pergunta" : "Questão"} {questaoAtual.ordem} de {totalQ}
             </span>
             <p className="text-white text-[22px] sm:text-[26px] leading-snug font-semibold whitespace-pre-line">
               {questaoAtual.texto}
@@ -206,7 +220,7 @@ export default function ProvaForm({ questoes, titulo, descricao, mensagemSucesso
                   className="w-full bg-brand-gold hover:bg-brand-gold-dark disabled:opacity-50 text-brand-dark font-bold py-5 rounded-2xl text-base tracking-wide transition-all active:scale-[0.98]"
                 >
                   {isLastQ && !hasGrupos
-                    ? (enviando ? "Enviando…" : "Enviar prova →")
+                    ? (enviando ? "Enviando…" : `${enviarLabel} →`)
                     : "Próxima →"}
                 </button>
               </div>
@@ -289,12 +303,12 @@ export default function ProvaForm({ questoes, titulo, descricao, mensagemSucesso
                     )}
                   </div>
                 </div>
-                <div className="absolute -bottom-1 -right-1 w-10 h-10 rounded-full bg-brand-dark border-2 border-brand-gold/30 flex items-center justify-center text-xl">🏅</div>
+                <div className="absolute -bottom-1 -right-1 w-10 h-10 rounded-full bg-brand-dark border-2 border-brand-gold/30 flex items-center justify-center text-xl">{pesquisa ? "📘" : "🏅"}</div>
               </div>
 
               {/* Título */}
               <div className="space-y-2">
-                <p className="text-brand-gold text-[11px] font-bold tracking-[0.3em] uppercase">Prova Final</p>
+                <p className="text-brand-gold text-[11px] font-bold tracking-[0.3em] uppercase">{pesquisa ? "Pesquisa" : "Prova Final"}</p>
                 <h1 className="text-white text-[26px] font-bold leading-tight" style={{ fontFamily: "var(--font-playfair)" }}>
                   {titulo?.trim() || <>Treinamento Conserto<br />de Roupas Lucrativo</>}
                 </h1>
@@ -303,10 +317,26 @@ export default function ProvaForm({ questoes, titulo, descricao, mensagemSucesso
 
               {/* Stats */}
               <div className="grid grid-cols-3 gap-3 w-full">
-                <Stat valor={String(totalQ)}           label="questões"    icon="📋" />
-                <Stat valor={String(pontuacaoTotal)}   label="pontos"      icon="⭐" />
-                <Stat valor="1"                        label="certificado" icon="🏅" />
+                {pesquisa ? (
+                  <>
+                    <Stat valor={String(totalQ)}                            label="perguntas" icon="📋" />
+                    <Stat valor={`~${Math.max(1, Math.ceil(totalQ / 3))}`} label="minutos"   icon="⏱️" />
+                    <Stat valor="1"                                         label="ebook"     icon="📘" />
+                  </>
+                ) : (
+                  <>
+                    <Stat valor={String(totalQ)}           label="questões"    icon="📋" />
+                    <Stat valor={String(pontuacaoTotal)}   label="pontos"      icon="⭐" />
+                    <Stat valor="1"                        label="certificado" icon="🏅" />
+                  </>
+                )}
               </div>
+
+              {pesquisa && ebookTitulo?.trim() && (
+                <p className="text-brand-gold/80 text-sm font-medium -mt-2">
+                  Ao final você recebe: {ebookTitulo}
+                </p>
+              )}
 
               {descricao && (
                 <p className="text-white/45 text-sm leading-relaxed max-w-xs">
@@ -322,7 +352,7 @@ export default function ProvaForm({ questoes, titulo, descricao, mensagemSucesso
               </button>
 
               <p className="text-white/20 text-xs">
-                Responda todas as questões para receber seu certificado
+                {pesquisa ? "Responda todas as perguntas para receber seu ebook gratuito" : "Responda todas as questões para receber seu certificado"}
               </p>
             </div>
           )}
@@ -336,7 +366,7 @@ export default function ProvaForm({ questoes, titulo, descricao, mensagemSucesso
                   Quem é você?
                 </h2>
                 <p className="text-white/35 text-sm">
-                  Usaremos esses dados para emitir seu certificado.
+                  {pesquisa ? "Precisamos desses dados para liberar seu ebook." : "Usaremos esses dados para emitir seu certificado."}
                 </p>
               </div>
 
@@ -417,7 +447,7 @@ export default function ProvaForm({ questoes, titulo, descricao, mensagemSucesso
                   disabled={enviando}
                   className="flex-1 bg-brand-gold hover:bg-brand-gold-dark disabled:opacity-50 text-brand-dark font-bold py-4 rounded-2xl text-sm tracking-wide transition-all active:scale-[0.98]"
                 >
-                  {enviando ? "Enviando…" : "Enviar prova →"}
+                  {enviando ? "Enviando…" : `${enviarLabel} →`}
                 </button>
               </div>
             </div>
@@ -430,14 +460,14 @@ export default function ProvaForm({ questoes, titulo, descricao, mensagemSucesso
 }
 
 // ── Tela de sucesso ──────────────────────────────────────────────────────────
-function Sucesso({ mensagem }: { mensagem?: string }) {
+function Sucesso({ mensagem, pesquisa }: { mensagem?: string; pesquisa?: boolean }) {
   return (
     <div className="min-h-screen bg-brand-dark flex items-center justify-center px-5 animate-fade-in">
       <div className="max-w-sm w-full text-center flex flex-col items-center gap-6">
-        <div className="text-6xl animate-[slideUp_0.6s_ease-out_0.1s_both]">🏅</div>
+        <div className="text-6xl animate-[slideUp_0.6s_ease-out_0.1s_both]">{pesquisa ? "💛" : "🏅"}</div>
         <div className="space-y-3 animate-[slideUp_0.6s_ease-out_0.2s_both]">
           <h2 className="text-white text-2xl font-bold" style={{ fontFamily: "var(--font-playfair)" }}>
-            Prova concluída!
+            {pesquisa ? "Obrigada por responder!" : "Prova concluída!"}
           </h2>
           <div className="w-12 h-[2px] bg-brand-gold mx-auto" />
         </div>
@@ -445,6 +475,38 @@ function Sucesso({ mensagem }: { mensagem?: string }) {
           {mensagem ?? "Parabéns por chegar até aqui!\n\nTe espero dentro da CAP.\n\n🚀 Prof. Carine ✂️"}
         </p>
         <p className="text-brand-gold/50 text-[11px] font-bold tracking-[0.25em] uppercase animate-[slideUp_0.6s_ease-out_0.4s_both]">
+          CAP — Consertos e Ajustes Perfeitos
+        </p>
+      </div>
+    </div>
+  );
+}
+
+// ── Tela final da pesquisa: entrega do ebook ─────────────────────────────────
+function EbookPronto({ ebook, mensagem }: { ebook: Ebook; mensagem?: string }) {
+  return (
+    <div className="min-h-screen bg-brand-dark flex items-center justify-center px-5 py-10 animate-fade-in">
+      <div className="max-w-sm w-full text-center flex flex-col items-center gap-6">
+        <div className="text-6xl animate-[slideUp_0.6s_ease-out_0.1s_both]">📘</div>
+        <div className="space-y-2 animate-[slideUp_0.6s_ease-out_0.2s_both]">
+          <p className="text-brand-gold text-[11px] font-bold tracking-[0.3em] uppercase">Obrigada por responder!</p>
+          <h2 className="text-white text-2xl font-bold leading-tight" style={{ fontFamily: "var(--font-playfair)" }}>
+            {ebook.titulo?.trim() || "Seu ebook está pronto"}
+          </h2>
+          <div className="w-12 h-[2px] bg-brand-gold mx-auto !mt-4" />
+        </div>
+        <p className="text-white/50 text-sm leading-relaxed whitespace-pre-line animate-[slideUp_0.6s_ease-out_0.3s_both]">
+          {mensagem?.trim() || "Como agradecimento, preparei esse material especial para você.\n\n🚀 Prof. Carine ✂️"}
+        </p>
+        <a
+          href={ebook.url}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="w-full bg-brand-gold hover:bg-brand-gold-dark text-brand-dark font-bold py-5 rounded-2xl text-base tracking-wide transition-all active:scale-[0.98] shadow-lg shadow-brand-gold/20 animate-[slideUp_0.6s_ease-out_0.4s_both]"
+        >
+          Baixar meu ebook →
+        </a>
+        <p className="text-brand-gold/50 text-[11px] font-bold tracking-[0.25em] uppercase animate-[slideUp_0.6s_ease-out_0.5s_both]">
           CAP — Consertos e Ajustes Perfeitos
         </p>
       </div>

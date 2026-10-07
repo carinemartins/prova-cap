@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import { notFound } from "next/navigation";
 import QuestaoForm from "@/components/QuestaoForm";
+import { getModo } from "@/lib/edicao";
 
 export const dynamic = "force-dynamic";
 
@@ -13,6 +14,7 @@ export default async function EditarQuestaoPage({ params }: { params: Promise<{ 
   });
 
   if (!questao) notFound();
+  const pesquisa = (await getModo(questao.edicaoId)) === "pesquisa";
 
   return (
     <div className="p-8 max-w-2xl">
@@ -20,7 +22,7 @@ export default async function EditarQuestaoPage({ params }: { params: Promise<{ 
         <h1 className="text-2xl font-bold text-white" style={{ fontFamily: "var(--font-playfair)" }}>Editar questão</h1>
         <p className="text-sm text-white/40 mt-1">Atualize o conteúdo ou as opções desta pergunta</p>
       </div>
-      <QuestaoForm questao={questao} />
+      <QuestaoForm questao={questao} pesquisa={pesquisa} />
     </div>
   );
 }
