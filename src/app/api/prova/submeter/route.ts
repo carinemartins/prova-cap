@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getEdicaoAtiva } from "@/lib/edicao";
+import { getEbook } from "@/lib/ebook";
 
 export async function POST(req: NextRequest) {
   try {
@@ -14,7 +15,7 @@ export async function POST(req: NextRequest) {
 
     const cfgs = Object.fromEntries(
       (await prisma.configuracao.findMany({
-        where: { edicaoId: edicao.id, chave: { in: ["prova_aberta", "modo", "ebook_url", "ebook_titulo"] } },
+        where: { edicaoId: edicao.id, chave: { in: ["prova_aberta", "modo", "ebook_titulo"] } },
       })).map((c) => [c.chave, c.valor])
     );
     const pesquisa = cfgs.modo === "pesquisa";
@@ -70,9 +71,9 @@ export async function POST(req: NextRequest) {
 
     await prisma.submissao.update({ where: { id: submissao.id }, data: { pontuacao } });
 
-    // Na pesquisa, o link do ebook só é revelado depois do envio
-    const ebook = pesquisa && cfgs.ebook_url
-      ? { url: cfgs.ebook_url, titulo: cfgs.ebook_titulo || null }
+    // Na pesquisa, o link do ebook só existe depois do envio (leva o id da submissão)
+    const ebook = pesquisa && (await getEbook(edicao.id))
+      ? { url: `/api/ebook?s=${submissao.id}`, titulo: cfgs.ebook_titulo || null }
       : null;
 
     return NextResponse.json({ ok: true, submissaoId: submissao.id, pontuacao, ebook });

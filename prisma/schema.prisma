@@ -40,6 +40,33 @@ model Edicao {
   configuracoes Configuracao[]
   submissoes    Submissao[]
   certificado   CertificadoModelo?
+  ebooks        EbookArquivo[]
+}
+
+// PDF entregue ao final da pesquisa. Fica no banco em partes de até 3 MB porque
+// a Vercel limita cada requisição a 4,5 MB; só o arquivo `completo` é usado.
+model EbookArquivo {
+  id          String       @id @default(cuid())
+  edicaoId    String
+  edicao      Edicao       @relation(fields: [edicaoId], references: [id])
+  nome        String
+  tamanho     Int
+  totalPartes Int
+  completo    Boolean      @default(false)
+  createdAt   DateTime     @default(now())
+  partes      EbookParte[]
+
+  @@index([edicaoId])
+}
+
+model EbookParte {
+  id        String       @id @default(cuid())
+  arquivoId String
+  arquivo   EbookArquivo @relation(fields: [arquivoId], references: [id], onDelete: Cascade)
+  indice    Int
+  dados     Bytes        @db.LongBlob
+
+  @@unique([arquivoId, indice])
 }
 
 model Grupo {

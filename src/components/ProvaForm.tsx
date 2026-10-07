@@ -500,8 +500,7 @@ function EbookPronto({ ebook, mensagem }: { ebook: Ebook; mensagem?: string }) {
         </p>
         <a
           href={ebook.url}
-          target="_blank"
-          rel="noopener noreferrer"
+          download
           className="w-full bg-brand-gold hover:bg-brand-gold-dark text-brand-dark font-bold py-5 rounded-2xl text-base tracking-wide transition-all active:scale-[0.98] shadow-lg shadow-brand-gold/20 animate-[slideUp_0.6s_ease-out_0.4s_both]"
         >
           Baixar meu ebook →

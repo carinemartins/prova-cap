@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import EbookUpload from "@/components/EbookUpload";
 
 export default function ConfiguracoesPage() {
   const [titulo, setTitulo] = useState("");
@@ -9,7 +10,6 @@ export default function ConfiguracoesPage() {
   const [provaAberta, setProvaAberta] = useState(true);
   const [modo, setModo] = useState<"prova" | "pesquisa">("prova");
   const [ebookTitulo, setEbookTitulo] = useState("");
-  const [ebookUrl, setEbookUrl] = useState("");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [ok, setOk] = useState(false);
@@ -27,7 +27,6 @@ export default function ConfiguracoesPage() {
         setProvaAberta(data.prova_aberta !== "false");
         setModo(data.modo === "pesquisa" ? "pesquisa" : "prova");
         setEbookTitulo(data.ebook_titulo ?? "");
-        setEbookUrl(data.ebook_url ?? "");
         setLoading(false);
       });
   }, []);
@@ -48,7 +47,6 @@ export default function ConfiguracoesPage() {
         prova_aberta: provaAberta ? "true" : "false",
         modo,
         ebook_titulo: ebookTitulo,
-        ebook_url: ebookUrl,
       }),
     });
 
@@ -116,22 +114,10 @@ export default function ConfiguracoesPage() {
                 placeholder="Ex: Guia de Preços para Consertos"
               />
             </div>
-            <div>
-              <label className="block text-xs font-semibold text-white/40 uppercase tracking-wider mb-1.5">
-                Link do ebook
-              </label>
-              <input
-                type="url"
-                value={ebookUrl}
-                onChange={(e) => setEbookUrl(e.target.value)}
-                className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm text-white placeholder-white/25 focus:outline-none focus:border-brand-gold/50 focus:ring-1 focus:ring-brand-gold/20 transition-colors"
-                placeholder="https://drive.google.com/..."
-                required
-              />
-              <p className="text-xs text-white/30 mt-1.5">
-                Link do PDF (Google Drive, Dropbox etc.) com acesso público. Só é mostrado depois que a pessoa envia as respostas.
-              </p>
-            </div>
+            <EbookUpload />
+            <p className="text-xs text-white/30">
+              O download só é liberado para quem envia as respostas da pesquisa.
+            </p>
           </div>
         )}
 

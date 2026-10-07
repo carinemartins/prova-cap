@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { getEdicaoAtiva } from "@/lib/edicao";
+import { getEbook } from "@/lib/ebook";
 
 export async function GET() {
   const session = await getServerSession();
@@ -24,18 +25,14 @@ export async function PUT(req: NextRequest) {
 
   const allowed = [
     "prova_titulo", "prova_descricao", "prova_mensagem_sucesso", "prova_aberta",
-    "modo", "ebook_titulo", "ebook_url",
+    "modo", "ebook_titulo",
   ];
 
   if ("modo" in body && body.modo !== "prova" && body.modo !== "pesquisa") {
     return NextResponse.json({ error: "Modo inválido." }, { status: 400 });
   }
-  const ebookUrl = String(body.ebook_url ?? "").trim();
-  if (ebookUrl && !/^https?:\/\//i.test(ebookUrl)) {
-    return NextResponse.json({ error: "O link do ebook deve começar com http:// ou https://" }, { status: 400 });
-  }
-  if (body.modo === "pesquisa" && !ebookUrl) {
-    return NextResponse.json({ error: "Informe o link do ebook para o modo pesquisa." }, { status: 400 });
+  if (body.modo === "pesquisa" && !(await getEbook(edicao.id))) {
+    return NextResponse.json({ error: "Envie o PDF do ebook antes de salvar no modo pesquisa." }, { status: 400 });
   }
 
   for (const chave of allowed) {
